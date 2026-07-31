@@ -1,0 +1,134 @@
+rules:
+- rule_id: R001
+  rule_name: Application ID Completeness
+  severity: Critical
+  dimension: Completeness
+  type: expression
+  expression: application_id == '' or application_id.isnull()
+  description: application_id must not be null, blank, or empty.
+- rule_id: R002
+  rule_name: Application ID Uniqueness
+  severity: Critical
+  dimension: Uniqueness
+  type: python
+  expression: ctx.duplicated_mask('application_id')
+  description: application_id must be unique across all application records. Duplicate
+    application IDs are not allowed.
+- rule_id: R003
+  rule_name: Mandatory Ownership
+  severity: Critical
+  dimension: Completeness
+  type: expression
+  expression: app_status == 'Active' and (business_owner == '' or technology_owner
+    == '')
+  description: business_owner and technology_owner must be populated for all active
+    applications.
+- rule_id: R004
+  rule_name: Valid Criticality
+  severity: High
+  dimension: Validity
+  type: expression
+  expression: criticality not in ['Critical','High','Medium','Low']
+  description: 'criticality must contain one of the allowed values: Critical, High,
+    Medium, Low.'
+- rule_id: R005
+  rule_name: Valid Evidence Status
+  severity: High
+  dimension: Validity
+  type: python
+  expression: ctx.invalid_yes_no_mask(['evidence_submitted','access_review_completed','privileged_access_approved','mfa_enabled','encryption_at_rest','backup_enabled','policy_exception'])
+  description: Fields such as evidence_submitted, access_review_completed, privileged_access_approved,
+    mfa_enabled, encryption_at_rest, backup_enabled, and policy_exception must contain
+    only Yes or No values.
+- rule_id: R006
+  rule_name: Evidence Submission Required
+  severity: Critical
+  dimension: Compliance
+  type: expression
+  expression: regulatory_scope in ['SOX','RBI','SEBI','Internal Audit'] and evidence_submitted
+    != 'Yes'
+  description: Applications within regulatory scope SOX, RBI, SEBI, or Internal Audit
+    must have evidence_submitted = Yes.
+- rule_id: R007
+  rule_name: Access Review Required
+  severity: Critical
+  dimension: Compliance
+  type: expression
+  expression: criticality in ['Critical','High'] and access_review_completed != 'Yes'
+  description: Applications with criticality Critical or High must have access_review_completed
+    = Yes.
+- rule_id: R008
+  rule_name: Privileged Access Approval Required
+  severity: Critical
+  dimension: Access Governance
+  type: expression
+  expression: privileged_access_count > 0 and privileged_access_approved != 'Yes'
+  description: If privileged_access_count > 0, then privileged_access_approved must
+    be Yes.
+- rule_id: R009
+  rule_name: MFA Compliance Check
+  severity: Critical
+  dimension: Security
+  type: expression
+  expression: criticality in ['Critical','High'] and mfa_enabled != 'Yes'
+  description: Applications with criticality Critical or High must have mfa_enabled
+    = Yes.
+- rule_id: R010
+  rule_name: Encryption Compliance Check
+  severity: Critical
+  dimension: Security
+  type: expression
+  expression: data_classification in ['Confidential','Restricted'] and encryption_at_rest
+    != 'Yes'
+  description: Applications classified as Confidential or Restricted must have encryption_at_rest
+    = Yes.
+- rule_id: R011
+  rule_name: Backup Compliance Check
+  severity: Critical
+  dimension: Resilience
+  type: expression
+  expression: app_status == 'Active' and criticality in ['Critical','High'] and backup_enabled
+    != 'Yes'
+  description: Active applications with criticality Critical or High must have backup_enabled
+    = Yes.
+- rule_id: R012
+  rule_name: Disaster Recovery (DR) Test Compliance
+  severity: High
+  dimension: Resilience
+  type: python
+  expression: ctx.dr_test_invalid_mask()
+  description: Critical applications must have dr_test_completed = Yes, and dr_test_date
+    must be populated.
+- rule_id: R013
+  rule_name: Vulnerability Exception Validation
+  severity: Critical
+  dimension: Vulnerability Management
+  type: expression
+  expression: (vulnerability_status == 'Critical Open' or open_high_vulnerabilities
+    > 0) and policy_exception != 'Yes'
+  description: If vulnerability_status = Critical Open or open_high_vulnerabilities
+    > 0, a valid policy exception or approved remediation plan must exist.
+- rule_id: R014
+  rule_name: Exception Expiry Validation
+  severity: High
+  dimension: Governance
+  type: python
+  expression: ctx.exception_expiry_invalid_mask()
+  description: If policy_exception = Yes, then exception_expiry_date must be populated
+    and must not be expired as of the audit review date.
+- rule_id: R015
+  rule_name: Future DR Date Validation
+  severity: High
+  dimension: Timeliness
+  type: python
+  expression: ctx.future_dr_dates()
+  description: dr_test_date cannot be a future date relative to the audit assessment
+    date.
+- rule_id: R016
+  rule_name: Backup requires encryption when backup_enabled is Yes
+  severity: Critical
+  dimension: Security
+  type: expression
+  expression: backup_enabled == 'Yes' and encryption_at_rest != 'Yes'
+  description: If backup_enabled = Yes and encryption_at_rest != Yes, flag as Critical.
+    (Approved AI proposal P-20260721-001 from the local pilot run.)

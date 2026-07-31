@@ -1,0 +1,87 @@
+import {
+  MOCK_DATASET, MOCK_CONFIDENCE, MOCK_ISSUE_TOTALS, MOCK_BUCKETS,
+  MOCK_ISSUES, MOCK_REGULATIONS, MOCK_APPS_AT_RISK, MOCK_HISTORY, MOCK_RECOMMENDATIONS,
+} from "./mockData";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+
+async function getJson(path, fallback) {
+  if (!API_BASE) return fallback;
+  try {
+    const res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(`${path} -> ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn(`dashboard-api unreachable for ${path}, using mock data:`, err.message);
+    return fallback;
+  }
+}
+
+async function postJson(path, body) {
+  if (!API_BASE) {
+    // No backend configured -- simulate success so the UI is demoable.
+    return { ok: true, mocked: true, ...body };
+  }
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {}),
+  });
+  if (!res.ok) throw new Error(`${path} -> ${res.status}`);
+  return res.json();
+}
+
+export async function getOverview() {
+  return getJson("/api/overview", {
+    dataset: MOCK_DATASET,
+    confidence: MOCK_CONFIDENCE,
+    issue_totals: MOCK_ISSUE_TOTALS,
+    buckets: MOCK_BUCKETS,
+  });
+}
+
+export async function getIssues() {
+  return getJson("/api/issues", MOCK_ISSUES);
+}
+
+export async function getRegulations() {
+  return getJson("/api/regulations", MOCK_REGULATIONS);
+}
+
+export async function getImpactedApps() {
+  return getJson("/api/impacted-apps", MOCK_APPS_AT_RISK);
+}
+
+export async function getHistory() {
+  return getJson("/api/history", MOCK_HISTORY);
+}
+
+export async function getDatasets() {
+  return getJson("/api/datasets", [MOCK_DATASET]);
+}
+
+export async function getRecommendations() {
+  return getJson("/api/recommendations", MOCK_RECOMMENDATIONS);
+}
+
+export async function remediateIssue(ruleId, runId) {
+  return postJson(`/api/issues/${ruleId}/remediate`, { run_id: runId });
+}
+
+export async function acceptIssue(ruleId, runId) {
+  return postJson(`/api/issues/${ruleId}/accept`, { run_id: runId });
+}
+
+export async function getRootCause(ruleId, runId) {
+  return getJson(
+    `/api/issues/${ruleId}/root-cause${runId ? `?run_id=${runId}` : ""}`,
+    {
+      rule_id: ruleId,
+      root_cause: "Demo mode: connect NEXT_PUBLIC_API_BASE_URL to a deployed dashboard-api to get a real Vertex AI-generated root cause summary.",
+      affected_pattern: "N/A (mock data)",
+      confidence: 0,
+    },
+  );
+}
+
+export const isLiveMode = () => Boolean(API_BASE);

@@ -1,0 +1,152 @@
+﻿application_id,application_name,business_owner,technology_owner,criticality,data_classification,regulatory_scope,audit_year,last_control_test_date,evidence_submitted,evidence_submission_date,access_review_completed,access_review_date,privileged_access_count,privileged_access_approved,mfa_enabled,encryption_at_rest,backup_enabled,dr_test_completed,dr_test_date,vulnerability_status,open_high_vulnerabilities,policy_exception,exception_expiry_date,app_status,source_system
+APP-001,Payments Core,Asha Mehta,Ravi Kumar,Critical,Confidential,SOX,2026,10-06-2026,Yes,11-06-2026,Yes,12-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-002,AML Case Manager,Vikram Rao,Pooja Nair,High,Restricted,RBI,2026,05-06-2026,Yes,06-06-2026,Yes,06-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-003,Customer Portal,Neha Singh,Arjun Patel,Medium,Internal,None,2026,20-05-2026,No,,No,,0,No,Yes,No,No,No,,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-004,Loan Origination,Anil Desai,Sunita Rao,Critical,Confidential,SEBI,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-03-2026,No Critical Open,0,No,,Active,CMDB
+APP-005,Trade Finance,Manish Gupta,Deepa Iyer,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-006,Reporting Engine,Sunil Verma,,High,Internal,None,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-007,Identity Service,,Ravi Kumar,Critical,Confidential,SOX,2026,04-06-2026,Yes,04-06-2026,Yes,04-06-2026,3,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-008,Notification Hub,Asha Mehta,Pooja Nair,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,NAN,0,No,,Retired,CMDB
+APP-009,Data Lake,Praveen Shah,Anita Bose,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-010,Customer Onboarding,Rajesh Kumar,Meera Joshi,High,Restricted,RBI,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-011,Payments Core Duplicate,Asha Mehta,Ravi Kumar,Critical,Confidential,SOX,2026,10-06-2026,Yes,11-06-2026,Yes,12-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-012,Legacy Billing,Unknown,Unknown,Severe,Confidential,SEBI,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-03-2026,No Critical Open,0,No,,Active,CMDB
+APP-013,Feature Toggle Service,Owner D,Tech D,Critical,Confidential,SOX,2026,02-06-2026,Maybe,03-06-2026,Unknown,03-06-2026,2,Yes,Enabled,Encrypted,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-014,DR Test App,Owner E,Tech E,High,Internal,None,2026,10-06-2026,Yes,10-06-2026,Yes,10-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-01-2027,No Critical Open,0,No,,Active,CMDB
+APP-015,Exceptioned App,Owner F,Tech F,Critical,Confidential,RBI,2026,08-06-2026,Yes,09-06-2026,Yes,09-06-2026,4,No,Yes,Yes,Yes,Yes,01-05-2026,Critical Open,3,Yes,01-06-2026,Active,VULN_SCANNER
+APP-016,PrivCountText,Owner G,Tech G,High,Restricted,SOX,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,Two,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-017,NegativeVuln,Owner H,Tech H,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,-1,No,,Active,GRC_PORTAL
+APP-018,RetiredWithVulns,Owner I,Tech I,Low,Public,None,2026,01-05-2026,No,,No,,0,Yes,No,No,No,No,,Critical Open,2,No,,Retired,OracleDB
+,MissingAppID1,Owner J,Tech J,High,Restricted,SOX,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-03-2026,No Critical Open,0,No,,Active,CMDB
+APP-020,PolicyExceptionNoExpiry,Owner K,Tech K,Critical,Confidential,RBI,2026,04-06-2026,Yes,04-06-2026,Yes,04-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,Critical Open,1,Yes,,Active,GRC_PORTAL
+APP-021,ArchivedApp,Owner L,Tech L,Medium,Internal,None,2026,05-06-2026,Yes,05-06-2026,Yes,05-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Archived,CMDB
+APP-022,GoodApp1,Owner M,Tech M,Low,Internal,None,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,No,,No Critical Open,0,No,,Active,CMDB
+APP-023,GoodApp2,Owner N,Tech N,Medium,Internal,None,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-024,GoodApp3,Owner O,Tech O,High,Restricted,SOX,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-025,GoodApp4,Owner P,Tech P,Critical,Confidential,SEBI,2026,04-06-2026,Yes,04-06-2026,Yes,04-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-026,MissingAppID2,,Tech Q,High,Restricted,RBI,2026,05-06-2026,Yes,05-06-2026,Yes,05-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-027,DuplicateID1,Owner R,Tech R,High,Restricted,RBI,2026,05-06-2026,Yes,05-06-2026,Yes,05-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-027,DuplicateID2,Owner R,Tech R,High,Restricted,RBI,2026,05-06-2026,Yes,05-06-2026,Yes,05-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-028,BadYesNo,Owner S,Tech S,Critical,Confidential,SOX,2026,06-06-2026,Y,06-06-2026,N,06-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-029,FutureDR,Owner T,Tech T,High,Internal,None,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-12-2028,No Critical Open,0,No,,Active,CMDB
+APP-030,ExpiredException,Owner U,Tech U,Critical,Confidential,RBI,2026,08-06-2026,Yes,09-06-2026,Yes,09-06-2026,2,No,Yes,Yes,Yes,Yes,01-05-2026,Critical Open,2,Yes,31-12-2025,Active,VULN_SCANNER
+APP-031,NonNumericPriv,Owner V,Tech V,High,Restricted,SOX,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,NaN,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-032,NegativeVulnCount,Owner W,Tech W,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,-5,No,,Active,GRC_PORTAL
+APP-033,RetiredOpenVuln,Owner X,Tech X,Low,Public,None,2026,01-05-2026,No,,No,,0,Yes,No,No,No,No,,Critical Open,1,No,,Retired,OracleDB
+APP-034,MissingOwners, , ,High,Restricted,SOX,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-03-2026,No Critical Open,0,No,,Active,CMDB
+APP-035,ExceptionNoExpiry,Owner Y,Tech Y,Critical,Confidential,RBI,2026,04-06-2026,Yes,04-06-2026,Yes,04-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,Critical Open,1,Yes,,Active,GRC_PORTAL
+APP-036,ArchivedUnexpected,Owner Z,Tech Z,Medium,Internal,None,2026,05-06-2026,Yes,05-06-2026,Yes,05-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Archived,CMDB
+APP-037,GoodApp5,Owner AA,Tech AA,Low,Internal,None,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-038,GoodApp6,Owner BB,Tech BB,Medium,Internal,None,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-039,GoodApp7,Owner CC,Tech CC,High,Restricted,SOX,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-040,GoodApp8,Owner DD,Tech DD,Critical,Confidential,SEBI,2026,04-06-2026,Yes,04-06-2026,Yes,04-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-041,EdgeCase1,Owner EE,Tech EE,Critical,Confidential,SOX,2026,10-06-2026,Yes,11-06-2026,Yes,12-06-2026,5,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-042,EdgeCase2,Owner FF,Tech FF,High,Restricted,RBI,2026,05-06-2026,Yes,06-06-2026,Yes,06-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-043,EdgeCase3,Owner GG,Tech GG,Medium,Internal,None,2026,20-05-2026,No,,No,,0,No,Yes,No,No,No,,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-044,EdgeCase4,Owner HH,Tech HH,Critical,Confidential,SEBI,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-03-2026,No Critical Open,0,No,,Active,CMDB
+APP-045,EdgeCase5,Owner II,Tech II,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-046,EdgeCase6,Owner JJ,Tech JJ,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-047,EdgeCase7,Owner KK,Tech KK,Medium,Internal,None,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-048,EdgeCase8,Owner LL,Tech LL,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-049,EdgeCase9,Owner MM,Tech MM,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-050,EdgeCase10,Owner NN,Tech NN,High,Restricted,RBI,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-051,SampleApp1,Owner OO,Tech OO,Medium,Internal,None,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-052,SampleApp2,Owner PP,Tech PP,Low,Internal,None,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-053,SampleApp3,Owner QQ,Tech QQ,High,Restricted,SOX,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-054,SampleApp4,Owner RR,Tech RR,Critical,Confidential,SEBI,2026,04-06-2026,Yes,04-06-2026,Yes,04-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-055,SampleApp5,Owner SS,Tech SS,High,Restricted,RBI,2026,05-06-2026,Yes,05-06-2026,Yes,05-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-056,SampleApp6,Owner TT,Tech TT,Medium,Internal,None,2026,06-06-2026,Yes,06-06-2026,Yes,06-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-057,SampleApp7,Owner UU,Tech UU,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-058,SampleApp8,Owner VV,Tech VV,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-059,SampleApp9,Owner WW,Tech WW,High,Restricted,SOX,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-060,SampleApp10,Owner XX,Tech XX,Medium,Internal,None,2026,08-06-2026,Yes,08-06-2026,Yes,08-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-061,EdgeMix1,Owner YY,Tech YY,Critical,Confidential,SOX,2026,10-06-2026,Yes,11-06-2026,Yes,12-06-2026,3,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-062,EdgeMix2,Owner ZZ,Tech ZZ,High,Restricted,RBI,2026,05-06-2026,Yes,06-06-2026,Yes,06-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-063,EdgeMix3,Owner AAA,Tech AAA,Medium,Internal,None,2026,20-05-2026,No,,No,,0,No,Yes,No,No,No,,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-064,EdgeMix4,Owner BBB,Tech BBB,Critical,Confidential,SEBI,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-03-2026,No Critical Open,0,No,,Active,CMDB
+APP-065,EdgeMix5,Owner CCC,Tech CCC,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-066,EdgeMix6,Owner DDD,Tech DDD,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-067,EdgeMix7,Owner EEE,Tech EEE,Medium,Internal,None,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-068,EdgeMix8,Owner FFF,Tech FFF,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-069,EdgeMix9,Owner GGG,Tech GGG,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-070,EdgeMix10,Owner HHH,Tech HHH,High,Restricted,SOX,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-071,Var1,Owner III,Tech III,High,Restricted,SOX,2026,06/31/2026,Yes,07-06-2026,Yes,07-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-072,Var2,Owner JJJ,Tech JJJ,Medium,Internal,None,2026,2026.06.02,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-073,Var3,Owner KKK,Tech KKK,Low,Public,None,2026,May 5 2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-074,Var4,Owner LLL,Tech LLL,Critical,Confidential,SEBI,2026,04-06-2026,Yes,04-06-2026,Yes,04-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-075,Var5,Owner MMM,Tech MMM,High,Restricted,RBI,2026,05-06-2026,Yes,05-06-2026,Yes,05-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-076,Var6,Owner NNN,Tech NNN,Medium,Internal,None,2026,06-06-2026,Yes,06-06-2026,Yes,06-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-077,Var7,Owner OOO,Tech OOO,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-078,Var8,Owner PPP,Tech PPP,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-079,Var9,Owner QQQ,Tech QQQ,High,Restricted,SOX,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-080,Var10,Owner RRR,Tech RRR,Medium,Internal,None,2026,08-06-2026,Yes,08-06-2026,Yes,08-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-081,Demo1,Owner SSS,Tech SSS,Critical,Confidential,SOX,2026,10-06-2026,Yes,11-06-2026,Yes,12-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-082,Demo2,Owner TTT,Tech TTT,High,Restricted,RBI,2026,05-06-2026,Yes,06-06-2026,Yes,06-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-083,Demo3,Owner UUU,Tech UUU,Medium,Internal,None,2026,20-05-2026,No,,No,,0,No,Yes,No,No,No,,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-084,Demo4,Owner VVV,Tech VVV,Critical,Confidential,SEBI,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-03-2026,No Critical Open,0,No,,Active,CMDB
+APP-085,Demo5,Owner WWW,Tech WWW,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-086,Demo6,Owner XXX,Tech XXX,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-087,Demo7,Owner YYY,Tech YYY,Medium,Internal,None,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-088,Demo8,Owner ZZZ,Tech ZZZ,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-089,Demo9,Owner AAAA,Tech AAAA,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-090,Demo10,Owner BBBB,Tech BBBB,High,Restricted,SOX,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-091,TestApp1,Owner CCCC,Tech CCCC,Medium,Internal,None,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-092,TestApp2,Owner DDDD,Tech DDDD,Low,Internal,None,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-093,TestApp3,Owner EEEE,Tech EEEE,High,Restricted,SOX,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-094,TestApp4,Owner FFFF,Tech FFFF,Critical,Confidential,SEBI,2026,04-06-2026,Yes,04-06-2026,Yes,04-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-095,TestApp5,Owner GGGG,Tech GGGG,High,Restricted,RBI,2026,05-06-2026,Yes,05-06-2026,Yes,05-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-096,TestApp6,Owner HHHH,Tech HHHH,Medium,Internal,None,2026,06-06-2026,Yes,06-06-2026,Yes,06-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-097,TestApp7,Owner IIII,Tech IIII,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-098,TestApp8,Owner JJJJ,Tech JJJJ,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-099,TestApp9,Owner KKKK,Tech KKKK,High,Restricted,SOX,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-100,TestApp10,Owner LLLL,Tech LLL,Medium,Internal,None,2026,08-06-2026,Yes,08-06-2026,Yes,08-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-101,Anomaly1,Owner MMMM,Tech MMMM,Critical,Confidential,SOX,2026,10-06-2026,Yes,11-06-2026,Yes,12-06-2026,7,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-102,Anomaly2,Owner NNNN,Tech NNNN,High,Restricted,RBI,2026,05-06-2026,Yes,06-06-2026,Yes,06-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-103,Anomaly3,Owner OOOO,Tech OOOO,Medium,Internal,None,2026,20-05-2026,No,,No,,0,No,Yes,No,No,No,,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-104,Anomaly4,Owner PPPP,Tech PPPP,Critical,Confidential,SEBI,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-03-2026,No Critical Open,0,No,,Active,CMDB
+APP-105,Anomaly5,Owner QQQQ,Tech QQQQ,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,3,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-106,Anomaly6,Owner RRRR,Tech RRRR,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,3,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-107,Anomaly7,Owner SSSS,Tech SSSS,Medium,Internal,None,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-108,Anomaly8,Owner TTTT,Tech TTTT,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-109,Anomaly9,Owner UUUU,Tech UUUU,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-110,Anomaly10,Owner VVVV,Tech VVVV,High,Restricted,SOX,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-111,Final1,Owner WWWW,Tech WWWW,Medium,Internal,None,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-112,Final2,Owner XXXX,Tech XXXX,Low,Internal,None,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-113,Final3,Owner YYYY,Tech YYYY,High,Restricted,SOX,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-114,Final4,Owner ZZZZ,Tech ZZZZ,Critical,Confidential,SEBI,2026,04-06-2026,Yes,04-06-2026,Yes,04-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-115,Final5,Owner AAA1,Tech AAA1,High,Restricted,RBI,2026,05-06-2026,Yes,05-06-2026,Yes,05-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-116,Final6,Owner BBB1,Tech BBB1,Medium,Internal,None,2026,06-06-2026,Yes,06-06-2026,Yes,06-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-117,Final7,Owner CCC1,Tech CCC1,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-118,Final8,Owner DDD1,Tech DDD1,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-119,Final9,Owner EEE1,Tech EEE1,High,Restricted,SOX,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-120,Final10,Owner FFF1,Tech FFF1,Medium,Internal,None,2026,08-06-2026,Yes,08-06-2026,Yes,08-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-121,Wrap1,Owner GGG1,Tech GGG1,Critical,Confidential,SOX,2026,10-06-2026,Yes,11-06-2026,Yes,12-06-2026,4,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-122,Wrap2,Owner HHH1,Tech HHH1,High,Restricted,RBI,2026,05-06-2026,Yes,06-06-2026,Yes,06-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-123,Wrap3,Owner III1,Tech III1,Medium,Internal,None,2026,20-05-2026,No,,No,,0,No,Yes,No,No,No,,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-124,Wrap4,Owner JJJ1,Tech JJJ1,Critical,Confidential,SEBI,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-03-2026,No Critical Open,0,No,,Active,CMDB
+APP-125,Wrap5,Owner KKK1,Tech KKK1,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-126,Wrap6,Owner LLL1,Tech LLL1,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-127,Wrap7,Owner MMM1,Tech MMM1,Medium,Internal,None,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-128,Wrap8,Owner NNN1,Tech NNN1,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-129,Wrap9,Owner OOO1,Tech OOO1,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-130,Wrap10,Owner PPP1,Tech PPP1,High,Restricted,SOX,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-131,FinalWrap1,Owner QQQ1,Tech QQQ1,Medium,Internal,None,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-132,FinalWrap2,Owner RRR1,Tech RRR1,Low,Internal,None,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-133,FinalWrap3,Owner SSS1,Tech SSS1,High,Restricted,SOX,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-134,FinalWrap4,Owner TTT1,Tech TTT1,Critical,Confidential,SEBI,2026,04-06-2026,Yes,04-06-2026,Yes,04-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-135,FinalWrap5,Owner UUU1,Tech UUU1,High,Restricted,RBI,2026,05-06-2026,Yes,05-06-2026,Yes,05-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-136,FinalWrap6,Owner VVV1,Tech VVV1,Medium,Internal,None,2026,06-06-2026,Yes,06-06-2026,Yes,06-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-137,FinalWrap7,Owner WWW1,Tech WWW1,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-138,FinalWrap8,Owner XXX1,Tech XXX1,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-139,FinalWrap9,Owner YYY1,Tech YYY1,High,Restricted,SOX,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB
+APP-140,FinalWrap10,Owner ZZZ1,Tech ZZZ1,Medium,Internal,None,2026,08-06-2026,Yes,08-06-2026,Yes,08-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-141,Overflow1,Owner A1,Tech A1,Critical,Confidential,SOX,2026,10-06-2026,Yes,11-06-2026,Yes,12-06-2026,6,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-142,Overflow2,Owner B1,Tech B1,High,Restricted,RBI,2026,05-06-2026,Yes,06-06-2026,Yes,06-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-143,Overflow3,Owner C1,Tech C1,Medium,Internal,None,2026,20-05-2026,No,,No,,0,No,Yes,No,No,No,,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-144,Overflow4,Owner D1,Tech D1,Critical,Confidential,SEBI,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-03-2026,No Critical Open,0,No,,Active,CMDB
+APP-145,Overflow5,Owner E1,Tech E1,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-146,Overflow6,Owner F1,Tech F1,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-147,Overflow7,Owner G1,Tech G1,Medium,Internal,None,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-148,Overflow8,Owner H1,Tech H1,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-149,Overflow9,Owner I1,Tech I1,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-150,Overflow10,Owner J1,Tech J1,High,Restricted,SOX,2026,07-06-2026,Yes,07-06-2026,Yes,07-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-04-2026,No Critical Open,0,No,,Active,CMDB

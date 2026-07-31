@@ -1,0 +1,5 @@
+functions-framework==3.*
+google-cloud-storage==2.*
+google-cloud-bigquery==3.*
+python-docx==1.*
+PyYAML==6.*

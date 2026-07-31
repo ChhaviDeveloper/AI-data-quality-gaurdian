@@ -1,0 +1,87 @@
+# Maps "this rule failed on these columns" to the real downstream table
+# that resolves WHICH reports are affected: report_catalog (seeded from
+# report_catalog_seed.csv via tools/load_report_catalog_seed.py).
+#
+# The validator (see compute_target_impact in services/validator/main.py)
+# looks up report_catalog by application_id for every failed record and
+# only writes a target_impact_summary row when a matching report is found
+# -- an application with no reports produces no impact rows, since nothing
+# downstream is actually at risk.
+#
+# Fields:
+#   name                 - short label for this mapping
+#   trigger_rule_ids      - rule IDs from rules_registry.yaml; if any of
+#                           these fail on a row, we look up report_catalog
+#                           for that row's application_id
+#   source_columns        - which staging columns this mapping is about
+#                           (documentation only, not evaluated directly)
+#   target_table           - fully-qualified BigQuery table to resolve
+#                           against (project.dataset.table)
+#   join_key                - column name used to join staging <-> target
+#   impact_description     - shown in target_impact_summary alongside the
+#                           resolved report_name/consumers
+#   severity                - Critical | High | Medium | Low
+mappings:
+  - name: application_identity_downstream
+    trigger_rule_ids: [R001, R002]
+    source_columns: [application_id]
+    target_table: ai-data-quality-gaurdian.audit_controls.report_catalog
+    join_key: application_id
+    impact_description: >
+      Missing or duplicate application_id means this application's rows
+      can't be reliably joined into its reports -- figures may be dropped,
+      duplicated, or misattributed.
+    severity: Critical
+
+  - name: ownership_governance_downstream
+    trigger_rule_ids: [R003]
+    source_columns: [business_owner, technology_owner]
+    target_table: ai-data-quality-gaurdian.audit_controls.report_catalog
+    join_key: application_id
+    impact_description: >
+      Missing business/technology owner means reports that surface
+      accountable owners (e.g. master-data and regulatory reports) will
+      show blank or stale ownership for this application.
+    severity: High
+
+  - name: vulnerability_exception_downstream
+    trigger_rule_ids: [R013, R014]
+    source_columns: [vulnerability_status, open_high_vulnerabilities, policy_exception, exception_expiry_date]
+    target_table: ai-data-quality-gaurdian.audit_controls.report_catalog
+    join_key: application_id
+    impact_description: >
+      Invalid vulnerability/exception data may misstate risk in reports
+      that read vulnerability_status, open_high_vulnerabilities, or
+      policy_exception for this application.
+    severity: Critical
+
+  - name: security_posture_downstream
+    trigger_rule_ids: [R009, R010, R011, R016]
+    source_columns: [mfa_enabled, encryption_at_rest, backup_enabled]
+    target_table: ai-data-quality-gaurdian.audit_controls.report_catalog
+    join_key: application_id
+    impact_description: >
+      Invalid MFA/encryption/backup flags may misstate security posture in
+      reports that read these fields for this application.
+    severity: High
+
+  - name: access_governance_downstream
+    trigger_rule_ids: [R007, R008]
+    source_columns: [access_review_completed, privileged_access_count, privileged_access_approved]
+    target_table: ai-data-quality-gaurdian.audit_controls.report_catalog
+    join_key: application_id
+    impact_description: >
+      Invalid access-review or privileged-access data may misstate
+      governance status in reports that read these fields for this
+      application.
+    severity: High
+
+  - name: timeliness_downstream
+    trigger_rule_ids: [R012, R015]
+    source_columns: [dr_test_date, last_control_test_date]
+    target_table: ai-data-quality-gaurdian.audit_controls.report_catalog
+    join_key: application_id
+    impact_description: >
+      Invalid or future-dated control/DR test dates may misstate
+      timeliness in reports that read these dates for this application.
+    severity: Medium
