@@ -14,12 +14,12 @@
 #   WIF_PROVIDER, WIF_SERVICE_ACCOUNT
 #
 # Usage:
-#   PROJECT_ID=ai-data-quality-gaurdian \
+#   PROJECT_ID=ringed-hearth-504112-e3 \
 #   GITHUB_REPO="your-github-username/your-repo-name" \
 #   ./setup_workload_identity.sh
 set -euo pipefail
 
-PROJECT_ID="${PROJECT_ID:-ai-data-quality-gaurdian}"
+PROJECT_ID="${PROJECT_ID:-ringed-hearth-504112-e3}"
 GITHUB_REPO="${GITHUB_REPO:?Set GITHUB_REPO=owner/repo-name before running this}"
 POOL_ID="${POOL_ID:-github-actions-pool}"
 PROVIDER_ID="${PROVIDER_ID:-github-actions-provider}"

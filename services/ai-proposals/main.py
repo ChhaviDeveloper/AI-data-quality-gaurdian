@@ -43,15 +43,15 @@ from gemini_client import build_prompt_from_failures, build_prompt_from_drift, c
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ai-proposals")
 
-BQ_PROJECT = os.environ.get("BQ_PROJECT", "ai-data-quality-gaurdian")
+BQ_PROJECT = os.environ.get("BQ_PROJECT", "ringed-hearth-504112-e3")
 BQ_DATASET = os.environ.get("BQ_DATASET", "audit_controls")
 STAGING_TABLE = os.environ.get("STAGING_TABLE", "staging_audit_controls")
 RUN_ID = os.environ.get("RUN_ID")
 RULES_REGISTRY_PATH = os.environ.get(
-    "RULES_REGISTRY_PATH", "gs://ai-data-quality-gaurdian-dq-bucket/specs/rules_registry.yaml"
+    "RULES_REGISTRY_PATH", "gs://ringed-hearth-504112-e3-dq-bucket/specs/rules_registry.yaml"
 )
 TARGET_TABLE_REGISTRY_PATH = os.environ.get(
-    "TARGET_TABLE_REGISTRY_PATH", "gs://ai-data-quality-gaurdian-dq-bucket/specs/target_table_registry.yaml"
+    "TARGET_TABLE_REGISTRY_PATH", "gs://ringed-hearth-504112-e3-dq-bucket/specs/target_table_registry.yaml"
 )
 NEW_PROPOSAL_TOPIC = os.environ.get("NEW_PROPOSAL_TOPIC", "new-proposal")
 MIN_CONFIDENCE_TO_KEEP = float(os.environ.get("MIN_CONFIDENCE_TO_KEEP", "0.5"))

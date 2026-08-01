@@ -17,7 +17,7 @@ from typing import Dict, Any, List
 
 logger = logging.getLogger("ai-proposals.gemini_client")
 
-GCP_PROJECT = os.environ.get("BQ_PROJECT", "ai-data-quality-gaurdian")
+GCP_PROJECT = os.environ.get("BQ_PROJECT", "ringed-hearth-504112-e3")
 GCP_REGION = os.environ.get("GCP_REGION", "us-central1")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 

@@ -23,7 +23,7 @@ expects it, no extra nesting or moving files around (see Deploying).
 ## Architecture
 
 ```
-GCS gs://ai-data-quality-gaurdian-dq-bucket/
+GCS gs://ringed-hearth-504112-e3-dq-bucket/
   functional-docs/*.docx --(Eventarc)--> doc-parser --> specs/rules_registry.yaml (GCS)
                                                       --> rules_registry_history (BQ)
 
@@ -152,7 +152,7 @@ cd services/validator && python main.py \
 
 1. **GCS bucket + BigQuery tables + Pub/Sub topics** -- two equivalent options, pick one (not both):
    - **Terraform** (`cloud-pipeline/terraform/`): `terraform init && terraform apply` from that directory, with GCP application-default credentials for `var.project_id` set up. Creates the landing bucket (`var.bucket_name`, must be globally unique -- rename it in `variables.tf` if it's taken), uploads `specs/rules_registry.yaml` + `specs/target_table_registry.yaml` into it, and creates all the BigQuery tables. If `audit_controls` or the bucket already exist from earlier manual steps, set `create_dataset = false` / `terraform import` them first instead of letting `apply` try (and fail) to create something that's already there.
-   - **Plain gcloud/bq/gsutil, no Terraform** (`cloud-pipeline/scripts/manual_gcp_setup.sh`): does the exact same thing as idempotent CLI commands -- no Terraform state to manage. Run `cd cloud-pipeline/scripts && PROJECT_ID=ai-data-quality-gaurdian ./manual_gcp_setup.sh`. Safe to re-run any time (every command either no-ops or uses `CREATE ... IF NOT EXISTS` / `CREATE OR REPLACE`).
+   - **Plain gcloud/bq/gsutil, no Terraform** (`cloud-pipeline/scripts/manual_gcp_setup.sh`): does the exact same thing as idempotent CLI commands -- no Terraform state to manage. Run `cd cloud-pipeline/scripts && PROJECT_ID=ringed-hearth-504112-e3 ./manual_gcp_setup.sh`. Safe to re-run any time (every command either no-ops or uses `CREATE ... IF NOT EXISTS` / `CREATE OR REPLACE`).
 2. **Seed the report_catalog reference table**: `python tools/load_report_catalog_seed.py` (after the table exists from step 1). Re-run this any time you update `report_catalog_seed.csv` with real reports.
 3. **Cloud Run services/jobs + Eventarc wiring** (GitHub Actions): the workflow is already at `.github/workflows/deploy-cloud-pipeline.yml`, right where GitHub expects it -- nothing to move. One-time prerequisites: run `scripts/setup_workload_identity.sh` (see "CI/CD setup" below) and add the `WIF_PROVIDER`/`WIF_SERVICE_ACCOUNT` GitHub secrets it prints out. It's `workflow_dispatch`-only (manual, pick a target from the dropdown) on purpose, since every run spends part of your GCP budget. Deploy order: `doc-parser`, `ingest`, `validator`, `ai-proposals`, `notifier` first (or `all`), then `triggers` once those services/jobs exist, then `dashboard-api` and `frontend`.
 
@@ -161,11 +161,11 @@ Note: `ci/deploy-cloud-pipeline.yml` and `docs/deploy_dashboard_jobs_snippet.yml
 ## CI/CD setup (GitHub Actions + Workload Identity Federation)
 
 1. Push this project to your GitHub repo as-is (this folder is the repo root).
-2. Run `scripts/setup_workload_identity.sh` once (`PROJECT_ID=ai-data-quality-gaurdian GITHUB_REPO=your-username/your-repo-name ./setup_workload_identity.sh`) -- creates a Workload Identity Pool restricted to your repo, a deployer service account GitHub Actions impersonates (no long-lived key), and a separate narrower-permission runtime service account for the actual Cloud Run services/jobs. Prints the two secret values you need next.
+2. Run `scripts/setup_workload_identity.sh` once (`PROJECT_ID=ringed-hearth-504112-e3 GITHUB_REPO=your-username/your-repo-name ./setup_workload_identity.sh`) -- creates a Workload Identity Pool restricted to your repo, a deployer service account GitHub Actions impersonates (no long-lived key), and a separate narrower-permission runtime service account for the actual Cloud Run services/jobs. Prints the two secret values you need next.
 3. Add those as GitHub repo secrets: Settings > Secrets and variables > Actions > New repository secret -- `WIF_PROVIDER` and `WIF_SERVICE_ACCOUNT`.
 4. (Optional) Add a repo *variable* (not secret) `LOOKER_EMBED_URL` once you have a Looker Studio report -- the frontend deploy job reads it.
 5. Go to the Actions tab, run "Deploy Cloud Pipeline", pick a target from the dropdown.
-4. Upload a functional doc to `gs://ai-data-quality-gaurdian-dq-bucket/functional-docs/` and a CSV (e.g. `sample_data/audit_data_150rows.csv`) to `gs://ai-data-quality-gaurdian-dq-bucket/incoming/` to kick off an end-to-end run.
+4. Upload a functional doc to `gs://ringed-hearth-504112-e3-dq-bucket/functional-docs/` and a CSV (e.g. `sample_data/audit_data_150rows.csv`) to `gs://ringed-hearth-504112-e3-dq-bucket/incoming/` to kick off an end-to-end run.
 5. **Seed the applicable_regulations reference table**: `python tools/load_applicable_regulations_seed.py` (after step 1). Re-run when you add a country/regulation.
 6. **Deploy `dashboard-api`** (Cloud Run service, not a job): `gcloud run deploy dashboard-api --source services/dashboard-api --region europe-west1 --allow-unauthenticated` (tighten auth before sharing outside the team). Note its URL.
 7. **Deploy `frontend`**: `cd frontend && gcloud run deploy dashboard-frontend --source . --region europe-west1 --allow-unauthenticated --build-env-vars-file=<(echo "NEXT_PUBLIC_API_BASE_URL: <dashboard-api URL from step 6>")` -- or build/push the Docker image yourself with `--build-arg NEXT_PUBLIC_API_BASE_URL=...` (and `NEXT_PUBLIC_LOOKER_EMBED_URL` once you have it, see below). Remember: these are `NEXT_PUBLIC_*` vars, baked in at *build* time, not runtime.
@@ -182,7 +182,7 @@ Replaces the originally-planned Looker-Studio-only dashboard with a full interac
 The Analytics page embeds a Looker Studio report via `NEXT_PUBLIC_LOOKER_EMBED_URL`. Looker Studio is read-only BI (no write-back), so it complements -- not replaces -- the Remediate/Accept workflow in Data Quality Issues. To set it up:
 
 1. Go to [lookerstudio.google.com](https://lookerstudio.google.com), create a new report.
-2. Add a BigQuery data source: project `ai-data-quality-gaurdian`, dataset `audit_controls`. Add each of these as a data source (all already exist as views, seeded with real pipeline output once a run has happened): `v_dq_confidence_trend` (confidence score over time -- line chart), `v_dq_issue_overview` (issues by severity -- bar chart), `v_dq_activity_log` (recent runs/proposals -- table).
+2. Add a BigQuery data source: project `ringed-hearth-504112-e3`, dataset `audit_controls`. Add each of these as a data source (all already exist as views, seeded with real pipeline output once a run has happened): `v_dq_confidence_trend` (confidence score over time -- line chart), `v_dq_issue_overview` (issues by severity -- bar chart), `v_dq_activity_log` (recent runs/proposals -- table).
 3. Build 2-3 charts on those data sources (a trend line + a severity bar chart is enough for a hackathon demo).
 4. `File > Embed report`, enable embedding, and set sharing so the people who'll view the dashboard can access it (either "Anyone with the link" or restricted to your Google Workspace domain -- match your data-sensitivity requirements here since this is audit/compliance data).
 5. Copy the embed URL (looks like `https://lookerstudio.google.com/embed/reporting/<report-id>/page/<page-id>`) into `frontend/.env.local` as `NEXT_PUBLIC_LOOKER_EMBED_URL`, then rebuild/redeploy the frontend.

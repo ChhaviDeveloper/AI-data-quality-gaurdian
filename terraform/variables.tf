@@ -1,7 +1,7 @@
 variable "project_id" {
   description = "GCP project ID"
   type        = string
-  default     = "ai-data-quality-gaurdian"
+  default     = "ringed-hearth-504112-e3"
 }
 
 variable "region" {
@@ -25,7 +25,7 @@ variable "create_dataset" {
 variable "bucket_name" {
   description = "GCS bucket the pipeline reads/writes (functional-docs/, incoming/, specs/). Must be globally unique across all of GCS, not just this project."
   type        = string
-  default     = "ai-data-quality-gaurdian-dq-bucket"
+  default     = "ringed-hearth-504112-e3-dq-bucket"
 }
 
 variable "bucket_location" {

@@ -36,8 +36,8 @@ from google.cloud import storage, bigquery, pubsub_v1
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ingest")
 
-BUCKET = os.environ.get("BUCKET", "ai-data-quality-gaurdian-dq-bucket")
-BQ_PROJECT = os.environ.get("BQ_PROJECT", "ai-data-quality-gaurdian")
+BUCKET = os.environ.get("BUCKET", "ringed-hearth-504112-e3-dq-bucket")
+BQ_PROJECT = os.environ.get("BQ_PROJECT", "ringed-hearth-504112-e3")
 BQ_DATASET = os.environ.get("BQ_DATASET", "audit_controls")
 STAGING_TABLE = os.environ.get("STAGING_TABLE", "staging_audit_controls")
 INCOMING_PREFIX = os.environ.get("INCOMING_PREFIX", "incoming/")

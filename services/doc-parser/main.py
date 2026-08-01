@@ -30,8 +30,8 @@ from functional_parser import generate_rules_registry_from_functional_doc
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("doc-parser")
 
-BUCKET = os.environ.get("BUCKET", "ai-data-quality-gaurdian-dq-bucket")
-BQ_PROJECT = os.environ.get("BQ_PROJECT", "ai-data-quality-gaurdian")
+BUCKET = os.environ.get("BUCKET", "ringed-hearth-504112-e3-dq-bucket")
+BQ_PROJECT = os.environ.get("BQ_PROJECT", "ringed-hearth-504112-e3")
 BQ_DATASET = os.environ.get("BQ_DATASET", "audit_controls")
 REGISTRY_GCS_PATH = os.environ.get("REGISTRY_GCS_PATH", f"gs://{BUCKET}/specs/rules_registry.yaml")
 DOC_PREFIX = os.environ.get("DOC_PREFIX", "functional-docs/")

@@ -33,10 +33,10 @@ on:
           - frontend
 
 env:
-  PROJECT_ID: ai-data-quality-gaurdian
+  PROJECT_ID: ringed-hearth-504112-e3
   REGION: europe-west1
-  BUCKET_NAME: ai-data-quality-gaurdian-dq-bucket
-  RUNTIME_SA_EMAIL: dq-pipeline-runtime@ai-data-quality-gaurdian.iam.gserviceaccount.com
+  BUCKET_NAME: ringed-hearth-504112-e3-dq-bucket
+  RUNTIME_SA_EMAIL: dq-pipeline-runtime@ringed-hearth-504112-e3.iam.gserviceaccount.com
 
 jobs:
   # ---------------------------------------------------------------------

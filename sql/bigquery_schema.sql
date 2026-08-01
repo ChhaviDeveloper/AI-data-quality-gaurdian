@@ -4,10 +4,10 @@
 -- eyeball the schema without reading HCL, or paste it into the BigQuery
 -- console for a quick manual setup while Terraform access is being sorted out.
 
-CREATE SCHEMA IF NOT EXISTS `ai-data-quality-gaurdian.audit_controls`
+CREATE SCHEMA IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls`
 OPTIONS (location = 'US');
 
-CREATE TABLE IF NOT EXISTS `ai-data-quality-gaurdian.audit_controls.rule_execution_summary` (
+CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.rule_execution_summary` (
   rule_id STRING NOT NULL,
   rule_name STRING,
   description STRING,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `ai-data-quality-gaurdian.audit_controls.rule_executi
 PARTITION BY DATE(run_timestamp)
 CLUSTER BY rule_id, batch_id;
 
-CREATE TABLE IF NOT EXISTS `ai-data-quality-gaurdian.audit_controls.target_impact_summary` (
+CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.target_impact_summary` (
   run_id STRING NOT NULL,
   run_timestamp TIMESTAMP NOT NULL,
   source_rule_id STRING,
@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `ai-data-quality-gaurdian.audit_controls.target_impac
 PARTITION BY DATE(run_timestamp)
 CLUSTER BY source_rule_id, target_table;
 
-CREATE TABLE IF NOT EXISTS `ai-data-quality-gaurdian.audit_controls.rule_proposals` (
+CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.rule_proposals` (
   proposal_id STRING NOT NULL,
   created_at TIMESTAMP NOT NULL,
   created_by STRING,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS `ai-data-quality-gaurdian.audit_controls.rule_proposa
 PARTITION BY DATE(created_at)
 CLUSTER BY status, source;
 
-CREATE TABLE IF NOT EXISTS `ai-data-quality-gaurdian.audit_controls.rules_registry_history` (
+CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.rules_registry_history` (
   generated_at TIMESTAMP NOT NULL,
   source_document STRING,
   rule_count INT64,
@@ -77,7 +77,7 @@ PARTITION BY DATE(generated_at);
 -- report_catalog: resolves a bad application_id into the actual downstream
 -- reports it feeds. Reference/config table, seeded from
 -- specs/report_catalog_seed.csv via tools/load_report_catalog_seed.py.
-CREATE TABLE IF NOT EXISTS `ai-data-quality-gaurdian.audit_controls.report_catalog` (
+CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.report_catalog` (
   report_id STRING NOT NULL,
   report_name STRING,
   application_id STRING NOT NULL,
@@ -105,7 +105,7 @@ CLUSTER BY application_id, report_id;
 -- dataset_registry: one row per ingested file/batch. Populated by
 -- services/ingest at the end of a successful load. Powers the dashboard's
 -- top bar + left-sidebar "Dataset Summary" panel.
-CREATE TABLE IF NOT EXISTS `ai-data-quality-gaurdian.audit_controls.dataset_registry` (
+CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.dataset_registry` (
   batch_id STRING NOT NULL,
   dataset_name STRING,
   source_file STRING,
@@ -130,7 +130,7 @@ CLUSTER BY batch_id;
 -- issue-level, failed_records_detail stays the row-level source of truth).
 -- Written by dashboard-api's POST /remediate and POST /accept; read back
 -- by v_dq_issues_detail (joined) to show current Status per issue.
-CREATE TABLE IF NOT EXISTS `ai-data-quality-gaurdian.audit_controls.remediation_actions` (
+CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.remediation_actions` (
   action_id STRING NOT NULL,
   run_id STRING NOT NULL,
   rule_id STRING NOT NULL,
@@ -156,7 +156,7 @@ CLUSTER BY run_id, rule_id;
 -- the active dataset (dataset_registry.region / report_catalog rows) to
 -- show only relevant regulations, matching the screenshot's "Applicable
 -- Laws & Regulations" panel.
-CREATE TABLE IF NOT EXISTS `ai-data-quality-gaurdian.audit_controls.applicable_regulations` (
+CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.applicable_regulations` (
   regulation_code STRING NOT NULL,
   regulation_name STRING,
   description STRING,

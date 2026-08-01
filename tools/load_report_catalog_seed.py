@@ -19,7 +19,7 @@ import argparse
 import pandas as pd
 from google.cloud import bigquery
 
-BQ_PROJECT = os.environ.get("BQ_PROJECT", "ai-data-quality-gaurdian")
+BQ_PROJECT = os.environ.get("BQ_PROJECT", "ringed-hearth-504112-e3")
 BQ_DATASET = os.environ.get("BQ_DATASET", "audit_controls")
 TABLE_NAME = "report_catalog"
 

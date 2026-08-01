@@ -40,15 +40,15 @@ from rules_engine import normalize_dataframe, run_all_rules
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("validator")
 
-BQ_PROJECT = os.environ.get("BQ_PROJECT", "ai-data-quality-gaurdian")
+BQ_PROJECT = os.environ.get("BQ_PROJECT", "ringed-hearth-504112-e3")
 BQ_DATASET = os.environ.get("BQ_DATASET", "audit_controls")
 STAGING_TABLE = os.environ.get("STAGING_TABLE", "staging_audit_controls")
 BATCH_ID = os.environ.get("BATCH_ID")  # optional override
 RULES_REGISTRY_PATH = os.environ.get(
-    "RULES_REGISTRY_PATH", "gs://ai-data-quality-gaurdian-dq-bucket/specs/rules_registry.yaml"
+    "RULES_REGISTRY_PATH", "gs://ringed-hearth-504112-e3-dq-bucket/specs/rules_registry.yaml"
 )
 TARGET_TABLE_REGISTRY_PATH = os.environ.get(
-    "TARGET_TABLE_REGISTRY_PATH", "gs://ai-data-quality-gaurdian-dq-bucket/specs/target_table_registry.yaml"
+    "TARGET_TABLE_REGISTRY_PATH", "gs://ringed-hearth-504112-e3-dq-bucket/specs/target_table_registry.yaml"
 )
 VALIDATION_COMPLETE_TOPIC = os.environ.get("VALIDATION_COMPLETE_TOPIC", "validation-complete")
 

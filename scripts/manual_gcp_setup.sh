@@ -7,13 +7,13 @@
 # `gsutil mb` no-op if the resource already exists, `bq query` DDL uses
 # CREATE TABLE IF NOT EXISTS / CREATE OR REPLACE VIEW).
 #
-# Usage: PROJECT_ID=ai-data-quality-gaurdian BUCKET_NAME=ai-data-quality-gaurdian-dq-bucket ./manual_gcp_setup.sh
+# Usage: PROJECT_ID=ringed-hearth-504112-e3 BUCKET_NAME=ringed-hearth-504112-e3-dq-bucket ./manual_gcp_setup.sh
 set -euo pipefail
 
-PROJECT_ID="${PROJECT_ID:-ai-data-quality-gaurdian}"
+PROJECT_ID="${PROJECT_ID:-ringed-hearth-504112-e3}"
 REGION="${REGION:-europe-west1}"
 BUCKET_LOCATION="${BUCKET_LOCATION:-US}"   # matches the BigQuery dataset's location
-BUCKET_NAME="${BUCKET_NAME:-ai-data-quality-gaurdian-dq-bucket}"
+BUCKET_NAME="${BUCKET_NAME:-ringed-hearth-504112-e3-dq-bucket}"
 DATASET_ID="${DATASET_ID:-audit_controls}"
 
 echo "== Project: $PROJECT_ID | Bucket: gs://$BUCKET_NAME | Region: $REGION =="

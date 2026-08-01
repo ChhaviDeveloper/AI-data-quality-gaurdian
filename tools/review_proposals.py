@@ -24,10 +24,10 @@ from datetime import datetime, timezone
 import yaml
 from google.cloud import bigquery, storage
 
-BQ_PROJECT = os.environ.get("BQ_PROJECT", "ai-data-quality-gaurdian")
+BQ_PROJECT = os.environ.get("BQ_PROJECT", "ringed-hearth-504112-e3")
 BQ_DATASET = os.environ.get("BQ_DATASET", "audit_controls")
 RULES_REGISTRY_GCS_PATH = os.environ.get(
-    "RULES_REGISTRY_PATH", "gs://ai-data-quality-gaurdian-dq-bucket/specs/rules_registry.yaml"
+    "RULES_REGISTRY_PATH", "gs://ringed-hearth-504112-e3-dq-bucket/specs/rules_registry.yaml"
 )
 
 bq_client = bigquery.Client(project=BQ_PROJECT)

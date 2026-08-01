@@ -31,7 +31,7 @@ from google.cloud import run_v2
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("job-trigger")
 
-PROJECT = os.environ.get("BQ_PROJECT", "ai-data-quality-gaurdian")
+PROJECT = os.environ.get("BQ_PROJECT", "ringed-hearth-504112-e3")
 TARGET_JOB_NAME = os.environ["TARGET_JOB_NAME"]
 TARGET_REGION = os.environ.get("TARGET_REGION", "europe-west1")
 ENV_OVERRIDE_KEYS = os.environ.get("ENV_OVERRIDE_KEYS", "")
