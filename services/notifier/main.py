@@ -14,13 +14,17 @@ stored its credentials in Secret Manager -- see the two stub functions below.
 
 Deploy as a Cloud Function (2nd gen) with a Pub/Sub trigger, or as a small
 Cloud Run service using functions-framework the same way as doc-parser/ingest.
+
+Local mode (no Cloud Run/Eventarc needed -- reads the latest proposal
+straight from BigQuery instead of decoding a Pub/Sub message):
+  python main.py --local-latest
 """
 import os
+import sys
 import json
 import base64
 import logging
-
-import functions_framework
+import argparse
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("notifier")
@@ -29,18 +33,12 @@ MAIL_PROVIDER = os.environ.get("MAIL_PROVIDER", "log_only")  # log_only | sendgr
 # TEMPORARY default recipient for testing -- override with the
 # NOTIFY_RECIPIENTS env var once you have a real distribution list.
 NOTIFY_RECIPIENTS = os.environ.get("NOTIFY_RECIPIENTS", "chhavi.srivastava.wrk@gmail.com")
+BQ_PROJECT = os.environ.get("BQ_PROJECT", "ringed-hearth-504112-e3")
+BQ_DATASET = os.environ.get("BQ_DATASET", "audit_controls")
 
 
-@functions_framework.cloud_event
-def main(cloud_event):
-    envelope = cloud_event.data.get("message", {})
-    raw = envelope.get("data", "")
-    try:
-        proposal = json.loads(base64.b64decode(raw).decode("utf-8"))
-    except Exception:
-        logger.exception("Could not decode Pub/Sub message payload")
-        return ("bad message", 200)
-
+def _notify(proposal: dict):
+    """Core logic shared by the Cloud Run entry point and local mode."""
     subject = f"[Audit DQ] New rule proposal: {proposal.get('rule_name', 'unknown')}"
     body = _format_body(proposal)
 
@@ -51,7 +49,28 @@ def main(cloud_event):
     else:
         logger.info("MAIL_PROVIDER=log_only -- alert not emailed, just logged:\n%s\n%s", subject, body)
 
+
+def main(cloud_event):
+    """Cloud Run entry point -- lazily imports functions_framework so this
+    module still works standalone (python main.py --local-latest) on a
+    machine that doesn't have functions-framework installed."""
+    envelope = cloud_event.data.get("message", {})
+    raw = envelope.get("data", "")
+    try:
+        proposal = json.loads(base64.b64decode(raw).decode("utf-8"))
+    except Exception:
+        logger.exception("Could not decode Pub/Sub message payload")
+        return ("bad message", 200)
+
+    _notify(proposal)
     return ("ok", 200)
+
+
+try:
+    import functions_framework
+    main = functions_framework.cloud_event(main)
+except ImportError:
+    pass
 
 
 def _format_body(proposal: dict) -> str:
@@ -106,3 +125,35 @@ def _send_via_smtp(subject: str, body: str):
             server.sendmail(msg["From"], NOTIFY_RECIPIENTS.split(","), msg.as_string())
     except Exception:
         logger.exception("SMTP send failed")
+
+
+def _local_main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--local-latest", action="store_true",
+        help="Fetch the most recent row from rule_proposals (BigQuery) and notify on it, "
+             "instead of decoding a Pub/Sub message. Needs Application Default Credentials "
+             "(gcloud auth application-default login) with BigQuery read access.",
+    )
+    args = ap.parse_args()
+
+    if not args.local_latest:
+        ap.error("Local mode currently only supports --local-latest.")
+
+    from google.cloud import bigquery
+    client = bigquery.Client(project=BQ_PROJECT)
+    sql = f"""
+        SELECT * FROM `{BQ_PROJECT}.{BQ_DATASET}.rule_proposals`
+        ORDER BY created_at DESC LIMIT 1
+    """
+    rows = list(client.query(sql).result())
+    if not rows:
+        print("No rows in rule_proposals yet -- run ai-proposals first.")
+        return
+    proposal = dict(rows[0].items())
+    _notify(proposal)
+    print(f"Notified on proposal {proposal.get('proposal_id')} (MAIL_PROVIDER={MAIL_PROVIDER}).")
+
+
+if __name__ == "__main__":
+    _local_main()

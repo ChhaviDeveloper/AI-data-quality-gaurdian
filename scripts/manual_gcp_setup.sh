@@ -8,6 +8,15 @@
 # CREATE TABLE IF NOT EXISTS / CREATE OR REPLACE VIEW).
 #
 # Usage: PROJECT_ID=ringed-hearth-504112-e3 BUCKET_NAME=ringed-hearth-504112-e3-dq-bucket ./manual_gcp_setup.sh
+#
+# ENABLE_CLOUD_RUN=false (default) skips Cloud Run / Cloud Build / Artifact
+# Registry / Eventarc entirely -- those four APIs require a fully-verified
+# ("prepaid") billing account on some free-trial accounts (India in
+# particular), separate from just having a billing account linked. If you
+# hit `UREQ_PROJECT_BILLING_NOT_OPEN` on those specifically, don't fight it --
+# leave this false and run the pipeline as local Python processes instead
+# (see README "Local-only execution"). Set ENABLE_CLOUD_RUN=true once you've
+# completed the prepayment and want to deploy containers to Cloud Run.
 set -euo pipefail
 
 PROJECT_ID="${PROJECT_ID:-ringed-hearth-504112-e3}"
@@ -15,22 +24,31 @@ REGION="${REGION:-europe-west1}"
 BUCKET_LOCATION="${BUCKET_LOCATION:-US}"   # matches the BigQuery dataset's location
 BUCKET_NAME="${BUCKET_NAME:-ringed-hearth-504112-e3-dq-bucket}"
 DATASET_ID="${DATASET_ID:-audit_controls}"
+ENABLE_CLOUD_RUN="${ENABLE_CLOUD_RUN:-false}"
 
-echo "== Project: $PROJECT_ID | Bucket: gs://$BUCKET_NAME | Region: $REGION =="
+echo "== Project: $PROJECT_ID | Bucket: gs://$BUCKET_NAME | Region: $REGION | Cloud Run APIs: $ENABLE_CLOUD_RUN =="
 
 echo "-- Setting active project --"
 gcloud config set project "$PROJECT_ID"
 
-echo "-- Enabling required APIs --"
+echo "-- Enabling core APIs (BigQuery, Storage, Pub/Sub, Vertex AI) --"
 gcloud services enable \
   bigquery.googleapis.com \
   storage.googleapis.com \
   pubsub.googleapis.com \
-  run.googleapis.com \
-  eventarc.googleapis.com \
-  aiplatform.googleapis.com \
-  cloudbuild.googleapis.com \
-  artifactregistry.googleapis.com
+  aiplatform.googleapis.com
+
+if [ "$ENABLE_CLOUD_RUN" = "true" ]; then
+  echo "-- Enabling Cloud Run / Cloud Build / Artifact Registry / Eventarc --"
+  gcloud services enable \
+    run.googleapis.com \
+    eventarc.googleapis.com \
+    cloudbuild.googleapis.com \
+    artifactregistry.googleapis.com
+else
+  echo "-- Skipping Cloud Run / Cloud Build / Artifact Registry / Eventarc (ENABLE_CLOUD_RUN=false) --"
+  echo "   Run each service as a local Python process instead -- see README 'Local-only execution'."
+fi
 
 echo "-- Creating GCS bucket (no-op if it already exists) --"
 gsutil mb -p "$PROJECT_ID" -l "$BUCKET_LOCATION" -b on "gs://$BUCKET_NAME" 2>/dev/null \
@@ -51,11 +69,15 @@ for topic in staging-loaded validation-complete new-proposal; do
   gcloud pubsub topics create "$topic" 2>/dev/null || echo "   topic $topic already exists"
 done
 
-echo "-- Granting the GCS service agent Pub/Sub publish rights (one-time project prereq for ANY GCS-triggered Eventarc trigger -- doc-parser, ingest) --"
-# The GCS service agent email is always PROJECT_NUMBER@gs-project-accounts.iam.gserviceaccount.com
-PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
-gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-  --member="serviceAccount:${PROJECT_NUMBER}@gs-project-accounts.iam.gserviceaccount.com" \
-  --role="roles/pubsub.publisher" --condition=None >/dev/null
+if [ "$ENABLE_CLOUD_RUN" = "true" ]; then
+  echo "-- Granting the GCS service agent Pub/Sub publish rights (one-time project prereq for ANY GCS-triggered Eventarc trigger -- doc-parser, ingest) --"
+  # The GCS service agent email is always PROJECT_NUMBER@gs-project-accounts.iam.gserviceaccount.com
+  PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
+  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+    --member="serviceAccount:${PROJECT_NUMBER}@gs-project-accounts.iam.gserviceaccount.com" \
+    --role="roles/pubsub.publisher" --condition=None >/dev/null
+else
+  echo "-- Skipping GCS->Pub/Sub Eventarc IAM grant (only needed for Cloud Run triggers) --"
+fi
 
-echo "== Done. Next: seed reference tables (tools/load_report_catalog_seed.py, tools/load_applicable_regulations_seed.py), then deploy the services. =="
+echo "== Done. Next: seed reference tables (tools/load_report_catalog_seed.py, tools/load_applicable_regulations_seed.py), then run the pipeline locally -- see README 'Local-only execution'. =="

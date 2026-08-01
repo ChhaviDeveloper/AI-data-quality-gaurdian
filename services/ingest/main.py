@@ -180,13 +180,38 @@ def _local_main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--local-csv", required=True)
     ap.add_argument("--local-out", default="tagged.csv")
+    ap.add_argument(
+        "--local-to-bq", action="store_true",
+        help="Also load the tagged rows into the real BigQuery staging table and write a "
+             "dataset_registry row -- the no-Cloud-Run path (skips GCS/Eventarc entirely, "
+             "goes local file -> real BigQuery directly). Needs Application Default "
+             "Credentials (gcloud auth application-default login) with BigQuery write access.",
+    )
     args = ap.parse_args()
+
+    batch_id = str(uuid.uuid4())
+    loaded_at = datetime.now(timezone.utc)
+
     df = pd.read_csv(args.local_csv, dtype=str)
-    df["batch_id"] = str(uuid.uuid4())
-    df["loaded_at"] = datetime.now(timezone.utc).isoformat()
+    df["batch_id"] = batch_id
+    df["loaded_at"] = loaded_at.isoformat()
     df["source_file"] = args.local_csv
     df.to_csv(args.local_out, index=False)
     print(f"Wrote {len(df)} tagged rows to {args.local_out}")
+
+    if args.local_to_bq:
+        row_count = _load_dataframe_to_staging(df)
+        print(f"Loaded {row_count} rows into {BQ_PROJECT}.{BQ_DATASET}.{STAGING_TABLE} (batch {batch_id})")
+        _write_dataset_registry(
+            batch_id=batch_id,
+            source_uri=args.local_csv,
+            dataset_name=os.path.basename(args.local_csv),
+            row_count=row_count,
+            columns_count=max(len(df.columns) - 3, 0),
+            loaded_at=loaded_at,
+            uploaded_by=os.environ.get("USER", "local"),
+        )
+        print(f"batch_id={batch_id}  <- pass this to validator's BATCH_ID env var")
 
 
 if __name__ == "__main__":

@@ -146,7 +146,32 @@ cd services/validator && python main.py \
   --local-out /tmp/validator_out
 ```
 
-`ai-proposals` and `notifier` call live Vertex AI / Pub/Sub APIs and don't have a local mode yet -- test those after deployment.
+`ai-proposals` already runs standalone (`python main.py`) against real BigQuery/Vertex AI -- it was never Cloud-Run-only. `notifier` now has `--local-latest` (reads the newest row from `rule_proposals` directly instead of decoding a Pub/Sub message).
+
+## Local-only execution (no Cloud Run / Cloud Build / Artifact Registry needed)
+
+If your billing account can't (or you don't want to) unlock Cloud Run/Cloud Build/Artifact Registry -- some free-trial accounts require an extra prepayment step for those specifically, separate from just having billing linked -- you can run the entire pipeline as plain Python processes against the real GCP backing services (BigQuery, GCS, Pub/Sub, Vertex AI), which don't require that. Same data, same Gemini calls, same BigQuery tables the dashboard reads; just no containers.
+
+1. **GCP setup, skipping Cloud Run entirely**: `cd scripts && PROJECT_ID=<your-project-id> ENABLE_CLOUD_RUN=false bash manual_gcp_setup.sh` (false is the default -- you can omit it). Also needs `gcloud auth application-default login` once, so the Python client libraries below can authenticate.
+2. **Seed reference tables**: `python tools/load_report_catalog_seed.py && python tools/load_applicable_regulations_seed.py`
+3. **Ingest a file straight into real BigQuery** (skips the GCS bucket + Eventarc trigger entirely):
+   ```bash
+   cd services/ingest
+   BQ_PROJECT=<your-project-id> python main.py --local-csv ../../sample_data/audit_data_150rows.csv --local-to-bq
+   ```
+   Prints a `batch_id` -- note it (or just let the next step default to "latest batch").
+4. **Run the validator against that real batch**:
+   ```bash
+   cd services/validator
+   BQ_PROJECT=<your-project-id> RULES_REGISTRY_PATH=../../specs/rules_registry.yaml TARGET_TABLE_REGISTRY_PATH=../../specs/target_table_registry.yaml python main.py
+   ```
+   (No `--local-csv` flag this time -- that flag switches to the fully-offline smoke-test path instead. Omitting it runs the real BigQuery-backed path and writes results back to `rule_execution_summary`, `failed_records_detail`, `target_impact_summary`.)
+5. **Run ai-proposals** (mines the run above for new rule candidates): `cd services/ai-proposals && BQ_PROJECT=<your-project-id> python main.py`
+6. **Run notifier** on whatever ai-proposals just wrote: `cd services/notifier && BQ_PROJECT=<your-project-id> python main.py --local-latest`
+7. **Run dashboard-api locally**: `cd services/dashboard-api && BQ_PROJECT=<your-project-id> python main.py` (serves on `localhost:8080`)
+8. **Run the frontend locally**, pointed at it: set `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080` in `frontend/.env.local`, then `cd frontend && npm install && npm run dev`
+
+Re-running steps 3-6 with a new CSV re-validates and re-mines, same as the Cloud Run pipeline would -- you're just triggering each step by hand instead of Eventarc/Pub-Sub doing it automatically. `job-trigger` isn't needed at all in this mode (it only exists to bridge Pub/Sub -> Cloud Run Jobs).
 
 ## Deploying
 
