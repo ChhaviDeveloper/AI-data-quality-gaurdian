@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Non-Terraform path: does everything terraform/main.tf + sql/bigquery_schema.sql
-# do, as plain gcloud/bq/gsutil commands. Use this instead of Terraform if you'd
+# do, as plain gcloud/bq commands. Use this instead of Terraform if you'd
 # rather not deal with Terraform state -- there is no functional difference in
 # what gets created; it's the same GCS bucket, same BigQuery tables, uploaded
-# the same way. Safe to re-run (every step is idempotent: `bq mk` and
-# `gsutil mb` no-op if the resource already exists, `bq query` DDL uses
-# CREATE TABLE IF NOT EXISTS / CREATE OR REPLACE VIEW).
+# the same way. Safe to re-run (every step checks existence first or uses
+# CREATE TABLE IF NOT EXISTS / CREATE OR REPLACE VIEW, so nothing errors out
+# on a second run).
 #
 # Usage: PROJECT_ID=ringed-hearth-504112-e3 BUCKET_NAME=ringed-hearth-504112-e3-dq-bucket ./manual_gcp_setup.sh
 #
@@ -51,12 +51,20 @@ else
 fi
 
 echo "-- Creating GCS bucket (no-op if it already exists) --"
-gsutil mb -p "$PROJECT_ID" -l "$BUCKET_LOCATION" -b on "gs://$BUCKET_NAME" 2>/dev/null \
-  || echo "   bucket already exists or name taken elsewhere -- if the latter, pick a new BUCKET_NAME"
+# Using `gcloud storage` (not `gsutil`) -- Google's current recommendation,
+# and it surfaces real errors instead of a generic guess. We explicitly
+# check existence first so a genuine creation failure (bad name, no
+# permission, etc.) isn't swallowed and mistaken for "already exists".
+if gcloud storage buckets describe "gs://$BUCKET_NAME" >/dev/null 2>&1; then
+  echo "   bucket already exists, skipping creation"
+else
+  gcloud storage buckets create "gs://$BUCKET_NAME" \
+    --project="$PROJECT_ID" --location="$BUCKET_LOCATION" --uniform-bucket-level-access
+fi
 
 echo "-- Uploading rule/target registries the validator + ai-proposals services read from GCS --"
-gsutil cp ../specs/rules_registry.yaml "gs://$BUCKET_NAME/specs/rules_registry.yaml"
-gsutil cp ../specs/target_table_registry.yaml "gs://$BUCKET_NAME/specs/target_table_registry.yaml"
+gcloud storage cp ../specs/rules_registry.yaml "gs://$BUCKET_NAME/specs/rules_registry.yaml"
+gcloud storage cp ../specs/target_table_registry.yaml "gs://$BUCKET_NAME/specs/target_table_registry.yaml"
 
 echo "-- Creating BigQuery dataset + tables (CREATE ... IF NOT EXISTS, safe to re-run) --"
 bq query --project_id="$PROJECT_ID" --use_legacy_sql=false < ../sql/bigquery_schema.sql
@@ -66,7 +74,11 @@ bq query --project_id="$PROJECT_ID" --use_legacy_sql=false < ../sql/dashboard_vi
 
 echo "-- Creating Pub/Sub topics (no-op if they already exist) --"
 for topic in staging-loaded validation-complete new-proposal; do
-  gcloud pubsub topics create "$topic" 2>/dev/null || echo "   topic $topic already exists"
+  if gcloud pubsub topics describe "$topic" --project="$PROJECT_ID" >/dev/null 2>&1; then
+    echo "   topic $topic already exists"
+  else
+    gcloud pubsub topics create "$topic" --project="$PROJECT_ID"
+  fi
 done
 
 if [ "$ENABLE_CLOUD_RUN" = "true" ]; then
