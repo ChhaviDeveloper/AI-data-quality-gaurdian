@@ -37,6 +37,14 @@ env:
   REGION: europe-west1
   BUCKET_NAME: ringed-hearth-504112-e3-dq-bucket
   RUNTIME_SA_EMAIL: dq-pipeline-runtime@ringed-hearth-504112-e3.iam.gserviceaccount.com
+  # Reuse the Artifact Registry repo `gcloud run deploy --source` already
+  # auto-creates on first use (deploy-dashboard-api) instead of pushing to
+  # the legacy gcr.io hostname -- pushing a brand-new image to gcr.io for
+  # the first time needs the special artifactregistry.repositories.
+  # createOnPush permission, which isn't included in artifactregistry.admin.
+  # Pushing into an *existing* Artifact Registry repo needs only ordinary
+  # writer/admin permissions, which the deployer SA already has.
+  AR_REPO: europe-west1-docker.pkg.dev/ringed-hearth-504112-e3/cloud-run-source-deploy
 
 jobs:
   # ---------------------------------------------------------------------
@@ -117,12 +125,12 @@ jobs:
         run: |
           gcloud builds submit services/validator \
             --project ${{ env.PROJECT_ID }} \
-            --tag gcr.io/${{ env.PROJECT_ID }}/validator:${{ github.sha }}
+            --tag ${{ env.AR_REPO }}/validator:${{ github.sha }}
       - name: Create or update validator job
         run: |
           gcloud run jobs describe validator --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} >/dev/null 2>&1 && ACTION=update || ACTION=create
           gcloud run jobs $ACTION validator \
-            --image gcr.io/${{ env.PROJECT_ID }}/validator:${{ github.sha }} \
+            --image ${{ env.AR_REPO }}/validator:${{ github.sha }} \
             --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} \
             --service-account ${{ env.RUNTIME_SA_EMAIL }} \
             --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},RULES_REGISTRY_PATH=gs://${{ env.BUCKET_NAME }}/specs/rules_registry.yaml,TARGET_TABLE_REGISTRY_PATH=gs://${{ env.BUCKET_NAME }}/specs/target_table_registry.yaml
@@ -142,12 +150,12 @@ jobs:
         run: |
           gcloud builds submit services/ai-proposals \
             --project ${{ env.PROJECT_ID }} \
-            --tag gcr.io/${{ env.PROJECT_ID }}/ai-proposals:${{ github.sha }}
+            --tag ${{ env.AR_REPO }}/ai-proposals:${{ github.sha }}
       - name: Create or update ai-proposals job
         run: |
           gcloud run jobs describe ai-proposals --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} >/dev/null 2>&1 && ACTION=update || ACTION=create
           gcloud run jobs $ACTION ai-proposals \
-            --image gcr.io/${{ env.PROJECT_ID }}/ai-proposals:${{ github.sha }} \
+            --image ${{ env.AR_REPO }}/ai-proposals:${{ github.sha }} \
             --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} \
             --service-account ${{ env.RUNTIME_SA_EMAIL }} \
             --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},GCP_REGION=us-central1
@@ -195,12 +203,12 @@ jobs:
         run: |
           gcloud builds submit services/job-trigger \
             --project ${{ env.PROJECT_ID }} \
-            --tag gcr.io/${{ env.PROJECT_ID }}/job-trigger:${{ github.sha }}
+            --tag ${{ env.AR_REPO }}/job-trigger:${{ github.sha }}
 
       - name: Deploy trigger-validator (staging-loaded -> validator job)
         run: |
           gcloud run deploy trigger-validator \
-            --image gcr.io/${{ env.PROJECT_ID }}/job-trigger:${{ github.sha }} \
+            --image ${{ env.AR_REPO }}/job-trigger:${{ github.sha }} \
             --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} \
             --service-account ${{ env.RUNTIME_SA_EMAIL }} --no-allow-unauthenticated \
             --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},TARGET_JOB_NAME=validator,TARGET_REGION=${{ env.REGION }},ENV_OVERRIDE_KEYS=batch_id=BATCH_ID
@@ -215,7 +223,7 @@ jobs:
       - name: Deploy trigger-ai-proposals (validation-complete -> ai-proposals job)
         run: |
           gcloud run deploy trigger-ai-proposals \
-            --image gcr.io/${{ env.PROJECT_ID }}/job-trigger:${{ github.sha }} \
+            --image ${{ env.AR_REPO }}/job-trigger:${{ github.sha }} \
             --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} \
             --service-account ${{ env.RUNTIME_SA_EMAIL }} --no-allow-unauthenticated \
             --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},TARGET_JOB_NAME=ai-proposals,TARGET_REGION=${{ env.REGION }},ENV_OVERRIDE_KEYS=run_id=RUN_ID
@@ -290,7 +298,7 @@ jobs:
             --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} \
             --format='value(status.url)')
           echo "url=$URL" >> "$GITHUB_OUTPUT"
-      - run: gcloud auth configure-docker gcr.io --quiet
+      - run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
       # NEXT_PUBLIC_* vars are build-time, so this can't go through
       # `gcloud run deploy --source`'s buildpack path -- build explicitly.
       - name: Build and push frontend image
@@ -298,12 +306,12 @@ jobs:
           docker build \
             --build-arg NEXT_PUBLIC_API_BASE_URL=${{ steps.api_url.outputs.url }} \
             --build-arg NEXT_PUBLIC_LOOKER_EMBED_URL="${{ vars.LOOKER_EMBED_URL }}" \
-            -t gcr.io/${{ env.PROJECT_ID }}/dashboard-frontend:${{ github.sha }} \
+            -t ${{ env.AR_REPO }}/dashboard-frontend:${{ github.sha }} \
             frontend
-          docker push gcr.io/${{ env.PROJECT_ID }}/dashboard-frontend:${{ github.sha }}
+          docker push ${{ env.AR_REPO }}/dashboard-frontend:${{ github.sha }}
       - name: Deploy frontend to Cloud Run
         run: |
           gcloud run deploy dashboard-frontend \
-            --image gcr.io/${{ env.PROJECT_ID }}/dashboard-frontend:${{ github.sha }} \
+            --image ${{ env.AR_REPO }}/dashboard-frontend:${{ github.sha }} \
             --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} \
             --allow-unauthenticated
