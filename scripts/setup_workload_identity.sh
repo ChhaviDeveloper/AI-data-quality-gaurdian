@@ -61,7 +61,7 @@ for role in \
   roles/bigquery.admin \
   roles/pubsub.admin \
   roles/eventarc.admin \
-  roles/artifactregistry.writer \
+  roles/artifactregistry.admin \
   roles/cloudbuild.builds.editor \
   roles/iam.serviceAccountUser
 do
