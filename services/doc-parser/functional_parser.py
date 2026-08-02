@@ -50,7 +50,7 @@ def _load_docx(path):
 RULE_TEMPLATES = {
     "R001": {"type":"expression", "expression":"application_id == '' or application_id.isnull()"},
     "R002": {"type":"python", "expression":"ctx.duplicated_mask('application_id')"},
-    "R003": {"type":"expression", "expression":"app_status == 'Active' and (business_owner == '' or technology_owner == '')"},
+    "R003": {"type":"expression", "expression":"app_status == 'Active' and (business_owner == '' or business_owner.isnull() or technology_owner == '' or technology_owner.isnull())"},
     "R004": {"type":"expression", "expression":"criticality not in ['Critical','High','Medium','Low']"},
     "R005": {"type":"python", "expression":"ctx.invalid_yes_no_mask(['evidence_submitted','access_review_completed','privileged_access_approved','mfa_enabled','encryption_at_rest','backup_enabled','policy_exception'])"},
     "R006": {"type":"expression", "expression":"regulatory_scope in ['SOX','RBI','SEBI','Internal Audit'] and evidence_submitted != 'Yes'"},
@@ -62,7 +62,8 @@ RULE_TEMPLATES = {
     "R012": {"type":"python", "expression":"ctx.dr_test_invalid_mask()"},
     "R013": {"type":"expression", "expression":"(vulnerability_status == 'Critical Open' or open_high_vulnerabilities > 0) and policy_exception != 'Yes'"},
     "R014": {"type":"python", "expression":"ctx.exception_expiry_invalid_mask()"},
-    "R015": {"type":"python", "expression":"ctx.future_dr_dates()"}
+    "R015": {"type":"python", "expression":"ctx.future_dr_dates()"},
+    "R016": {"type":"expression", "expression":"backup_enabled == 'Yes' and encryption_at_rest != 'Yes'"}
 }
 
 def _extract_rules_table(doc):
