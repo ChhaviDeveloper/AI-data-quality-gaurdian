@@ -85,6 +85,9 @@ if [ "$ENABLE_CLOUD_RUN" = "true" ]; then
   echo "-- Ensuring the GCS service agent exists (it's provisioned lazily -- doesn't exist until something forces it) --"
   gcloud storage service-agent --project="$PROJECT_ID" >/dev/null
 
+  echo "-- Ensuring the Eventarc service agent exists (same lazy-provisioning issue, different service -- needed to validate bucket access when creating GCS-triggered Eventarc triggers) --"
+  gcloud beta services identity create --service=eventarc.googleapis.com --project="$PROJECT_ID" >/dev/null
+
   echo "-- Granting the GCS service agent Pub/Sub publish rights (one-time project prereq for ANY GCS-triggered Eventarc trigger -- doc-parser, ingest) --"
   # The GCS service agent email is always PROJECT_NUMBER@gs-project-accounts.iam.gserviceaccount.com.
   # Even after the service-agent command above returns, IAM sometimes takes a
