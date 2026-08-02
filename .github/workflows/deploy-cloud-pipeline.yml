@@ -45,6 +45,11 @@ env:
   # Pushing into an *existing* Artifact Registry repo needs only ordinary
   # writer/admin permissions, which the deployer SA already has.
   AR_REPO: europe-west1-docker.pkg.dev/ringed-hearth-504112-e3/cloud-run-source-deploy
+  # GCS-source Eventarc triggers must be created in the *same location as the
+  # bucket itself* (manual_gcp_setup.sh creates it in the "US" multi-region by
+  # default) -- this is independent from REGION, which is where the
+  # destination Cloud Run services actually run (--destination-run-region).
+  BUCKET_LOCATION: us
 
 jobs:
   # ---------------------------------------------------------------------
@@ -177,9 +182,9 @@ jobs:
 
       - name: GCS trigger -- doc-parser on functional-docs/*.docx
         run: |
-          gcloud eventarc triggers describe doc-parser-trigger --project ${{ env.PROJECT_ID }} --location ${{ env.REGION }} >/dev/null 2>&1 || \
+          gcloud eventarc triggers describe doc-parser-trigger --project ${{ env.PROJECT_ID }} --location ${{ env.BUCKET_LOCATION }} >/dev/null 2>&1 || \
           gcloud eventarc triggers create doc-parser-trigger \
-            --project ${{ env.PROJECT_ID }} --location ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} --location ${{ env.BUCKET_LOCATION }} \
             --destination-run-service doc-parser --destination-run-region ${{ env.REGION }} \
             --event-filters "type=google.cloud.storage.object.v1.finalized" \
             --event-filters "bucket=${{ env.BUCKET_NAME }}" \
@@ -187,9 +192,9 @@ jobs:
 
       - name: GCS trigger -- ingest on incoming/*.csv
         run: |
-          gcloud eventarc triggers describe ingest-trigger --project ${{ env.PROJECT_ID }} --location ${{ env.REGION }} >/dev/null 2>&1 || \
+          gcloud eventarc triggers describe ingest-trigger --project ${{ env.PROJECT_ID }} --location ${{ env.BUCKET_LOCATION }} >/dev/null 2>&1 || \
           gcloud eventarc triggers create ingest-trigger \
-            --project ${{ env.PROJECT_ID }} --location ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} --location ${{ env.BUCKET_LOCATION }} \
             --destination-run-service ingest --destination-run-region ${{ env.REGION }} \
             --event-filters "type=google.cloud.storage.object.v1.finalized" \
             --event-filters "bucket=${{ env.BUCKET_NAME }}" \
