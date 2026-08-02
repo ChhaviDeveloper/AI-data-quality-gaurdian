@@ -88,6 +88,11 @@ gcloud iam service-accounts create "$RUNTIME_SA_NAME" \
   --display-name="DQ pipeline runtime" 2>/dev/null || echo "   runtime SA already exists"
 
 echo "-- Granting runtime SA the roles the pipeline services actually need at runtime --"
+# roles/eventarc.eventReceiver: any Eventarc trigger's --service-account must
+# hold this role project-wide, or trigger creation itself fails with
+# "Permission 'eventarc.events.receiveEvent' denied" -- it's what lets this
+# identity actually receive the delivered event calls, separate from all the
+# BigQuery/Storage/etc. roles below that the services need once invoked.
 for role in \
   roles/bigquery.dataEditor \
   roles/bigquery.jobUser \
@@ -95,7 +100,8 @@ for role in \
   roles/pubsub.publisher \
   roles/pubsub.subscriber \
   roles/aiplatform.user \
-  roles/run.developer
+  roles/run.developer \
+  roles/eventarc.eventReceiver
 do
   gcloud projects add-iam-policy-binding "$PROJECT_ID" \
     --member="serviceAccount:${RUNTIME_SA_EMAIL}" \
