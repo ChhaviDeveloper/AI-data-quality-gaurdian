@@ -64,19 +64,24 @@ export async function getRecommendations() {
   return getJson("/api/recommendations", MOCK_RECOMMENDATIONS);
 }
 
-export async function remediateIssue(ruleId, runId) {
-  return postJson(`/api/issues/${ruleId}/remediate`, { run_id: runId });
+export async function remediateIssue(ruleId, runId, applicationId) {
+  return postJson(`/api/issues/${ruleId}/remediate`, { run_id: runId, application_id: applicationId });
 }
 
-export async function acceptIssue(ruleId, runId) {
-  return postJson(`/api/issues/${ruleId}/accept`, { run_id: runId });
+export async function acceptIssue(ruleId, runId, applicationId) {
+  return postJson(`/api/issues/${ruleId}/accept`, { run_id: runId, application_id: applicationId });
 }
 
-export async function getRootCause(ruleId, runId) {
+export async function getRootCause(ruleId, runId, applicationId) {
+  const qs = new URLSearchParams();
+  if (runId) qs.set("run_id", runId);
+  if (applicationId) qs.set("application_id", applicationId);
+  const query = qs.toString();
   return getJson(
-    `/api/issues/${ruleId}/root-cause${runId ? `?run_id=${runId}` : ""}`,
+    `/api/issues/${ruleId}/root-cause${query ? `?${query}` : ""}`,
     {
       rule_id: ruleId,
+      application_id: applicationId,
       root_cause: "Demo mode: connect NEXT_PUBLIC_API_BASE_URL to a deployed dashboard-api to get a real Vertex AI-generated root cause summary.",
       affected_pattern: "N/A (mock data)",
       confidence: 0,

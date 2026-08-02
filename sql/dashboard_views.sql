@@ -160,6 +160,60 @@ LEFT JOIN latest_action a ON a.rule_id = r.rule_id AND a.run_id = r.run_id
 WHERE r.status != 'Passed'
 ORDER BY r.failed_count DESC;
 
+-- 9b. Issues (latest run), one row per (rule, application) instead of one
+-- row per rule -- lets each failing application be remediated/accepted
+-- independently instead of lumping every affected application under a
+-- single rule-level status. Sourced from failed_records_detail (the actual
+-- per-record failures) rather than rule_execution_summary's aggregate
+-- counts. DISTINCT on (failed_rule_id, application_id) because the same
+-- application can legitimately appear more than once in failed_records_detail
+-- for a single rule (e.g. R002 Application ID Uniqueness flags every
+-- duplicate row sharing that id).
+CREATE OR REPLACE VIEW `ringed-hearth-504112-e3.audit_controls.v_dq_issues_by_application` AS
+WITH latest AS (
+  SELECT run_id FROM `ringed-hearth-504112-e3.audit_controls.rule_execution_summary`
+  ORDER BY run_timestamp DESC LIMIT 1
+),
+failed_apps AS (
+  SELECT DISTINCT
+    f.failed_rule_id AS rule_id,
+    f.application_id,
+    f.application_name,
+    f.run_id,
+    f.run_timestamp
+  FROM `ringed-hearth-504112-e3.audit_controls.failed_records_detail` f
+  JOIN latest USING (run_id)
+),
+latest_action AS (
+  SELECT
+    rule_id,
+    application_id,
+    run_id,
+    ARRAY_AGG(
+      STRUCT(status, recommended_remediation, action_type, completed_at)
+      ORDER BY initiated_at DESC LIMIT 1
+    )[OFFSET(0)] AS latest
+  FROM `ringed-hearth-504112-e3.audit_controls.remediation_actions`
+  WHERE application_id IS NOT NULL
+  GROUP BY rule_id, application_id, run_id
+)
+SELECT
+  fa.rule_id, r.rule_name, r.description, r.severity, r.dimension,
+  fa.application_id, fa.application_name,
+  fa.run_id, fa.run_timestamp,
+  COALESCE(a.latest.status, 'Open') AS remediation_status,
+  a.latest.recommended_remediation AS recommended_remediation,
+  a.latest.action_type AS last_action_type,
+  a.latest.completed_at AS last_action_completed_at
+FROM failed_apps fa
+JOIN `ringed-hearth-504112-e3.audit_controls.rule_execution_summary` r
+  ON r.rule_id = fa.rule_id AND r.run_id = fa.run_id
+LEFT JOIN latest_action a
+  ON a.rule_id = fa.rule_id AND a.application_id = fa.application_id AND a.run_id = fa.run_id
+ORDER BY
+  CASE r.severity WHEN 'Critical' THEN 1 WHEN 'High' THEN 2 WHEN 'Medium' THEN 3 ELSE 4 END,
+  fa.rule_id, fa.application_id;
+
 -- 9. Applicable regulations, latest dataset's region first. The API filters
 -- further by the country(ies) actually present in the active batch; this
 -- view just surfaces the full reference set ordered so the relevant

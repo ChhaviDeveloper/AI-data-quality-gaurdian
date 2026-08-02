@@ -6,6 +6,9 @@ export default function RootCauseModal({ issue, data, loading, onClose }) {
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <h3>Root Cause Analysis -- {issue.rule_name}</h3>
+        {(issue.application_name || issue.application_id) && (
+          <p className="muted">Application: {issue.application_name || issue.application_id}</p>
+        )}
         <p className="muted">{issue.description}</p>
         {loading ? (
           <p>Analyzing with Vertex AI...</p>

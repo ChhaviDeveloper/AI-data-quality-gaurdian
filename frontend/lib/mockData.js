@@ -35,6 +35,7 @@ export const MOCK_BUCKETS = {
 export const MOCK_ISSUES = [
   {
     rule_id: "R001", rule_name: "Application ID Completeness", issue_type: "Missing Values",
+    application_id: "APP-104", application_name: "Customer 360 Dashboard",
     description: "Column 'Email' has 3,245 missing values (2.59%)", severity: "High",
     dimension: "Completeness", failed_count: 3245, total_records: 125430,
     recommended_remediation: "Populate missing email addresses using reference master data or mark as Not Available.",
@@ -42,6 +43,7 @@ export const MOCK_ISSUES = [
   },
   {
     rule_id: "R006", rule_name: "Phone Format Validity", issue_type: "Invalid Format",
+    application_id: "APP-112", application_name: "Customer Onboarding App",
     description: "Column 'Phone' has 1,987 invalid phone numbers", severity: "High",
     dimension: "Validity", failed_count: 1987, total_records: 125430,
     recommended_remediation: "Standardize phone numbers to E.164 format.",
@@ -49,6 +51,7 @@ export const MOCK_ISSUES = [
   },
   {
     rule_id: "R002", rule_name: "Application ID Uniqueness", issue_type: "Duplicate Records",
+    application_id: "APP-104", application_name: "Customer 360 Dashboard",
     description: "1,256 duplicate records identified based on 'Customer ID'", severity: "Medium",
     dimension: "Uniqueness", failed_count: 1256, total_records: 125430,
     recommended_remediation: "Remove duplicate records keeping the most recent entry.",
@@ -56,6 +59,7 @@ export const MOCK_ISSUES = [
   },
   {
     rule_id: "R018", rule_name: "Age Range Validity", issue_type: "Out of Range",
+    application_id: "APP-201", application_name: "Marketing Campaign Report",
     description: "Column 'Age' has 732 values out of valid range (0-120)", severity: "Medium",
     dimension: "Validity", failed_count: 732, total_records: 125430,
     recommended_remediation: "Correct age values or set to NULL if unavailable.",
@@ -63,6 +67,7 @@ export const MOCK_ISSUES = [
   },
   {
     rule_id: "R019", rule_name: "State Code Consistency", issue_type: "Inconsistent Data",
+    application_id: "APP-118", application_name: "Compliance Reporting",
     description: "Column 'State' has inconsistent state codes (CA, Calif, California)", severity: "Low",
     dimension: "Consistency", failed_count: 452, total_records: 125430,
     recommended_remediation: "Standardize state names using reference mapping.",
@@ -70,6 +75,7 @@ export const MOCK_ISSUES = [
   },
   {
     rule_id: "R020", rule_name: "Name Field Sanitization", issue_type: "Special Characters",
+    application_id: "APP-118", application_name: "Compliance Reporting",
     description: "Column 'Name' contains special characters in 452 records", severity: "Low",
     dimension: "Validity", failed_count: 452, total_records: 125430,
     recommended_remediation: "Remove or replace special characters.",

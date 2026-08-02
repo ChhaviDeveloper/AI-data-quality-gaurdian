@@ -16,7 +16,7 @@ export default function OverviewPage() {
   const [regulations, setRegulations] = useState([]);
   const [apps, setApps] = useState([]);
   const [history, setHistory] = useState([]);
-  const [busyRuleId, setBusyRuleId] = useState(null);
+  const [busyKey, setBusyKey] = useState(null);
   const [rootCause, setRootCause] = useState({ issue: null, data: null, loading: false });
 
   async function loadAll() {
@@ -32,29 +32,35 @@ export default function OverviewPage() {
 
   useEffect(() => { loadAll(); }, []);
 
+  function issueKey(issue) {
+    return `${issue.rule_id}::${issue.application_id || ""}`;
+  }
+
   async function handleRemediate(issue) {
-    setBusyRuleId(issue.rule_id);
+    const key = issueKey(issue);
+    setBusyKey(key);
     try {
-      await remediateIssue(issue.rule_id, issue.run_id);
-      setIssues((prev) => prev.map((i) => i.rule_id === issue.rule_id ? { ...i, remediation_status: "In Progress" } : i));
+      await remediateIssue(issue.rule_id, issue.run_id, issue.application_id);
+      setIssues((prev) => prev.map((i) => issueKey(i) === key ? { ...i, remediation_status: "In Progress" } : i));
     } finally {
-      setBusyRuleId(null);
+      setBusyKey(null);
     }
   }
 
   async function handleAccept(issue) {
-    setBusyRuleId(issue.rule_id);
+    const key = issueKey(issue);
+    setBusyKey(key);
     try {
-      await acceptIssue(issue.rule_id, issue.run_id);
-      setIssues((prev) => prev.map((i) => i.rule_id === issue.rule_id ? { ...i, remediation_status: "Closed" } : i));
+      await acceptIssue(issue.rule_id, issue.run_id, issue.application_id);
+      setIssues((prev) => prev.map((i) => issueKey(i) === key ? { ...i, remediation_status: "Closed" } : i));
     } finally {
-      setBusyRuleId(null);
+      setBusyKey(null);
     }
   }
 
   async function handleRootCause(issue) {
     setRootCause({ issue, data: null, loading: true });
-    const data = await getRootCause(issue.rule_id, issue.run_id);
+    const data = await getRootCause(issue.rule_id, issue.run_id, issue.application_id);
     setRootCause({ issue, data, loading: false });
   }
 
@@ -129,13 +135,14 @@ export default function OverviewPage() {
           <table>
             <thead>
               <tr>
-                <th>Issue Type</th><th>Description</th><th>Severity</th>
+                <th>Application</th><th>Issue Type</th><th>Description</th><th>Severity</th>
                 <th>Recommended Remediation</th><th>Actions</th><th>Status</th>
               </tr>
             </thead>
             <tbody>
               {issues.slice(0, 6).map((issue) => (
-                <tr key={issue.rule_id}>
+                <tr key={issueKey(issue)}>
+                  <td>{issue.application_name || issue.application_id || "--"}</td>
                   <td>{issue.issue_type || issue.dimension}</td>
                   <td>{issue.description}</td>
                   <td><SeverityBadge severity={issue.severity} /></td>
@@ -144,14 +151,14 @@ export default function OverviewPage() {
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                       <button
                         className="btn btn-primary"
-                        disabled={busyRuleId === issue.rule_id || issue.remediation_status === "Closed"}
+                        disabled={busyKey === issueKey(issue) || issue.remediation_status === "Closed"}
                         onClick={() => handleRemediate(issue)}
                       >
                         Remediate
                       </button>
                       <button
                         className="btn btn-outline"
-                        disabled={busyRuleId === issue.rule_id || issue.remediation_status === "Closed"}
+                        disabled={busyKey === issueKey(issue) || issue.remediation_status === "Closed"}
                         onClick={() => handleAccept(issue)}
                       >
                         Accept
@@ -165,7 +172,7 @@ export default function OverviewPage() {
                 </tr>
               ))}
               {issues.length === 0 && (
-                <tr><td colSpan={6} className="empty-state">No open issues.</td></tr>
+                <tr><td colSpan={7} className="empty-state">No open issues.</td></tr>
               )}
             </tbody>
           </table>

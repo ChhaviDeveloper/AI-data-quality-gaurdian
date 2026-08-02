@@ -7,31 +7,37 @@ import { getIssues, remediateIssue, acceptIssue, getRootCause } from "../../lib/
 
 export default function IssuesPage() {
   const [issues, setIssues] = useState([]);
-  const [busyRuleId, setBusyRuleId] = useState(null);
+  const [busyKey, setBusyKey] = useState(null);
   const [rootCause, setRootCause] = useState({ issue: null, data: null, loading: false });
   const [severityFilter, setSeverityFilter] = useState("All");
 
   useEffect(() => { getIssues().then(setIssues); }, []);
 
+  function issueKey(issue) {
+    return `${issue.rule_id}::${issue.application_id || ""}`;
+  }
+
   async function handleRemediate(issue) {
-    setBusyRuleId(issue.rule_id);
+    const key = issueKey(issue);
+    setBusyKey(key);
     try {
-      await remediateIssue(issue.rule_id, issue.run_id);
-      setIssues((prev) => prev.map((i) => i.rule_id === issue.rule_id ? { ...i, remediation_status: "In Progress" } : i));
-    } finally { setBusyRuleId(null); }
+      await remediateIssue(issue.rule_id, issue.run_id, issue.application_id);
+      setIssues((prev) => prev.map((i) => issueKey(i) === key ? { ...i, remediation_status: "In Progress" } : i));
+    } finally { setBusyKey(null); }
   }
 
   async function handleAccept(issue) {
-    setBusyRuleId(issue.rule_id);
+    const key = issueKey(issue);
+    setBusyKey(key);
     try {
-      await acceptIssue(issue.rule_id, issue.run_id);
-      setIssues((prev) => prev.map((i) => i.rule_id === issue.rule_id ? { ...i, remediation_status: "Closed" } : i));
-    } finally { setBusyRuleId(null); }
+      await acceptIssue(issue.rule_id, issue.run_id, issue.application_id);
+      setIssues((prev) => prev.map((i) => issueKey(i) === key ? { ...i, remediation_status: "Closed" } : i));
+    } finally { setBusyKey(null); }
   }
 
   async function handleRootCause(issue) {
     setRootCause({ issue, data: null, loading: true });
-    const data = await getRootCause(issue.rule_id, issue.run_id);
+    const data = await getRootCause(issue.rule_id, issue.run_id, issue.application_id);
     setRootCause({ issue, data, loading: false });
   }
 
@@ -57,31 +63,31 @@ export default function IssuesPage() {
         <table>
           <thead>
             <tr>
-              <th>Rule</th><th>Description</th><th>Severity</th><th>Dimension</th>
-              <th>Failed / Total</th><th>Recommended Remediation</th><th>Actions</th><th>Status</th>
+              <th>Rule</th><th>Application</th><th>Description</th><th>Severity</th><th>Dimension</th>
+              <th>Recommended Remediation</th><th>Actions</th><th>Status</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((issue) => (
-              <tr key={issue.rule_id}>
+              <tr key={issueKey(issue)}>
                 <td><strong>{issue.rule_id}</strong><br />{issue.rule_name}</td>
+                <td>{issue.application_name || issue.application_id || "--"}</td>
                 <td style={{ maxWidth: 240 }}>{issue.description}</td>
                 <td><SeverityBadge severity={issue.severity} /></td>
                 <td>{issue.dimension}</td>
-                <td>{Number(issue.failed_count || 0).toLocaleString()} / {Number(issue.total_records || 0).toLocaleString()}</td>
                 <td style={{ maxWidth: 220 }}>{issue.recommended_remediation || "--"}</td>
                 <td>
                   <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                     <button
                       className="btn btn-primary"
-                      disabled={busyRuleId === issue.rule_id || issue.remediation_status === "Closed"}
+                      disabled={busyKey === issueKey(issue) || issue.remediation_status === "Closed"}
                       onClick={() => handleRemediate(issue)}
                     >
                       Remediate
                     </button>
                     <button
                       className="btn btn-outline"
-                      disabled={busyRuleId === issue.rule_id || issue.remediation_status === "Closed"}
+                      disabled={busyKey === issueKey(issue) || issue.remediation_status === "Closed"}
                       onClick={() => handleAccept(issue)}
                     >
                       Accept

@@ -125,15 +125,19 @@ PARTITION BY DATE(uploaded_at)
 CLUSTER BY batch_id;
 
 -- remediation_actions: tracks the Remediate / Accept workflow shown per
--- issue row on the dashboard. One row per action taken on a
--- rule_execution_summary issue (not per failed record -- this is
--- issue-level, failed_records_detail stays the row-level source of truth).
--- Written by dashboard-api's POST /remediate and POST /accept; read back
--- by v_dq_issues_detail (joined) to show current Status per issue.
+-- issue row on the dashboard. One row per action taken on a specific
+-- (rule_id, application_id) pair within a run -- e.g. "MFA Compliance Check
+-- failing for APP-318" is tracked separately from the same rule failing for
+-- APP-330, since each application typically needs its own owner/fix/timeline.
+-- application_id is nullable to tolerate any pre-migration rows that predate
+-- this column (rule-level-only actions from before per-application tracking
+-- was added). Written by dashboard-api's POST /remediate and POST /accept;
+-- read back by v_dq_issues_by_application (joined) to show current Status.
 CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.remediation_actions` (
   action_id STRING NOT NULL,
   run_id STRING NOT NULL,
   rule_id STRING NOT NULL,
+  application_id STRING,
   batch_id STRING,
   issue_type STRING,
   issue_description STRING,
@@ -146,7 +150,13 @@ CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.remediation_a
   remediation_details STRING
 )
 PARTITION BY DATE(initiated_at)
-CLUSTER BY run_id, rule_id;
+CLUSTER BY run_id, rule_id, application_id;
+
+-- Migration for projects where remediation_actions already existed before
+-- application_id was added (CREATE TABLE IF NOT EXISTS above is a no-op on
+-- an existing table -- it won't add the new column). Safe to re-run.
+ALTER TABLE `ringed-hearth-504112-e3.audit_controls.remediation_actions`
+  ADD COLUMN IF NOT EXISTS application_id STRING;
 
 -- applicable_regulations: reference/config table, seeded from
 -- specs/applicable_regulations_seed.csv via

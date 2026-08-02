@@ -99,7 +99,7 @@ def overview():
         )
         confidence = conf_rows[0] if conf_rows else None
 
-    issues = bq.query(f"SELECT * FROM {bq.table('v_dq_issues_with_status')}")
+    issues = bq.query(f"SELECT * FROM {bq.table('v_dq_issues_by_application')}")
     total_issues = len(issues)
     open_issues = [i for i in issues if i.get("remediation_status") != "Closed"]
     closed_issues = [i for i in issues if i.get("remediation_status") == "Closed"]
@@ -124,56 +124,69 @@ def overview():
 
 @app.get("/api/issues")
 def issues():
-    rows = bq.query(f"SELECT * FROM {bq.table('v_dq_issues_with_status')}")
+    """One row per (rule, application) that's currently failing in the
+    latest run -- lets each affected application be remediated/accepted on
+    its own instead of one status for the whole rule. See
+    v_dq_issues_by_application in sql/dashboard_views.sql."""
+    rows = bq.query(f"SELECT * FROM {bq.table('v_dq_issues_by_application')}")
     return jsonify(rows)
 
 
 @app.get("/api/issues/<rule_id>/root-cause")
 def issue_root_cause(rule_id):
     run_id = request.args.get("run_id")
-    rule_rows = bq.query(
-        f"""SELECT * FROM {bq.table('v_dq_issues_with_status')}
-            WHERE rule_id = @rule_id {"AND run_id = @run_id" if run_id else ""}
+    application_id = request.args.get("application_id")
+    issue_rows = bq.query(
+        f"""SELECT * FROM {bq.table('v_dq_issues_by_application')}
+            WHERE rule_id = @rule_id {_and_run(run_id)} {_and_app(application_id)}
             LIMIT 1""",
-        params=_rule_params(rule_id, run_id),
+        params=_issue_params(rule_id, run_id, application_id),
     )
-    if not rule_rows:
+    if not issue_rows:
         return jsonify({"error": f"No issue found for rule_id={rule_id}"}), 404
-    rule = rule_rows[0]
+    issue = issue_rows[0]
 
+    # Root-cause context: this application's own failed record(s) if we know
+    # which application, otherwise fall back to a sample across all
+    # applications failing this rule (old rule-level behavior).
     sample_rows = bq.query(
         f"""SELECT * FROM {bq.table('failed_records_detail')}
-            WHERE failed_rule_id = @rule_id {"AND run_id = @run_id" if run_id else ""}
+            WHERE failed_rule_id = @rule_id {_and_run(run_id)} {_and_app(application_id)}
             LIMIT 5""",
-        params=_rule_params(rule_id, run_id),
+        params=_issue_params(rule_id, run_id, application_id),
     )
-    summary = gemini_helper.root_cause_summary(rule, sample_rows)
-    return jsonify({"rule_id": rule_id, **summary})
+    summary = gemini_helper.root_cause_summary(issue, sample_rows)
+    return jsonify({"rule_id": rule_id, "application_id": application_id, **summary})
 
 
 @app.post("/api/issues/<rule_id>/remediate")
 def remediate_issue(rule_id):
     body = request.get_json(silent=True) or {}
     run_id = body.get("run_id")
-    rule_rows = bq.query(
-        f"""SELECT * FROM {bq.table('v_dq_issues_with_status')}
-            WHERE rule_id = @rule_id {"AND run_id = @run_id" if run_id else ""}
-            LIMIT 1""",
-        params=_rule_params(rule_id, run_id),
-    )
-    if not rule_rows:
-        return jsonify({"error": f"No open issue found for rule_id={rule_id}"}), 404
-    rule = rule_rows[0]
+    application_id = body.get("application_id")
+    if not application_id:
+        return jsonify({"error": "application_id is required in the request body"}), 400
 
-    recommendation = gemini_helper.recommend_remediation(rule)
+    issue_rows = bq.query(
+        f"""SELECT * FROM {bq.table('v_dq_issues_by_application')}
+            WHERE rule_id = @rule_id AND application_id = @application_id {_and_run(run_id)}
+            LIMIT 1""",
+        params=_issue_params(rule_id, run_id, application_id),
+    )
+    if not issue_rows:
+        return jsonify({"error": f"No open issue found for rule_id={rule_id}, application_id={application_id}"}), 404
+    issue = issue_rows[0]
+
+    recommendation = gemini_helper.recommend_remediation(issue)
     now = datetime.now(timezone.utc)
     row = {
         "action_id": str(uuid.uuid4()),
-        "run_id": rule["run_id"],
+        "run_id": issue["run_id"],
         "rule_id": rule_id,
+        "application_id": application_id,
         "batch_id": body.get("batch_id"),
-        "issue_type": rule.get("dimension"),
-        "issue_description": rule.get("description"),
+        "issue_type": issue.get("dimension"),
+        "issue_description": issue.get("description"),
         "recommended_remediation": recommendation.get("recommended_remediation"),
         "action_type": "Remediate",
         "status": "In Progress",
@@ -190,25 +203,30 @@ def remediate_issue(rule_id):
 def accept_issue(rule_id):
     body = request.get_json(silent=True) or {}
     run_id = body.get("run_id")
-    rule_rows = bq.query(
-        f"""SELECT * FROM {bq.table('v_dq_issues_with_status')}
-            WHERE rule_id = @rule_id {"AND run_id = @run_id" if run_id else ""}
+    application_id = body.get("application_id")
+    if not application_id:
+        return jsonify({"error": "application_id is required in the request body"}), 400
+
+    issue_rows = bq.query(
+        f"""SELECT * FROM {bq.table('v_dq_issues_by_application')}
+            WHERE rule_id = @rule_id AND application_id = @application_id {_and_run(run_id)}
             LIMIT 1""",
-        params=_rule_params(rule_id, run_id),
+        params=_issue_params(rule_id, run_id, application_id),
     )
-    if not rule_rows:
-        return jsonify({"error": f"No open issue found for rule_id={rule_id}"}), 404
-    rule = rule_rows[0]
+    if not issue_rows:
+        return jsonify({"error": f"No open issue found for rule_id={rule_id}, application_id={application_id}"}), 404
+    issue = issue_rows[0]
 
     now = datetime.now(timezone.utc)
     row = {
         "action_id": str(uuid.uuid4()),
-        "run_id": rule["run_id"],
+        "run_id": issue["run_id"],
         "rule_id": rule_id,
+        "application_id": application_id,
         "batch_id": body.get("batch_id"),
-        "issue_type": rule.get("dimension"),
-        "issue_description": rule.get("description"),
-        "recommended_remediation": rule.get("recommended_remediation"),
+        "issue_type": issue.get("dimension"),
+        "issue_description": issue.get("description"),
+        "recommended_remediation": issue.get("recommended_remediation"),
         "action_type": "Accept",
         "status": "Closed",
         "initiated_by": body.get("initiated_by", "dashboard-user"),
@@ -386,10 +404,20 @@ def recommendations():
     return jsonify(rows)
 
 
-def _rule_params(rule_id: str, run_id: str | None):
+def _and_run(run_id: str | None) -> str:
+    return "AND run_id = @run_id" if run_id else ""
+
+
+def _and_app(application_id: str | None) -> str:
+    return "AND application_id = @application_id" if application_id else ""
+
+
+def _issue_params(rule_id: str, run_id: str | None, application_id: str | None = None):
     params = [bq.bigquery.ScalarQueryParameter("rule_id", "STRING", rule_id)]
     if run_id:
         params.append(bq.bigquery.ScalarQueryParameter("run_id", "STRING", run_id))
+    if application_id:
+        params.append(bq.bigquery.ScalarQueryParameter("application_id", "STRING", application_id))
     return params
 
 
