@@ -261,7 +261,18 @@ jobs:
             --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},BQ_DATASET=audit_controls,GCP_REGION=us-central1,BUCKET=${{ env.BUCKET_NAME }}
 
   deploy-frontend:
-    if: ${{ contains(fromJSON('["all","frontend"]'), github.event.inputs.target) }}
+    # `needs:` implicitly requires deploy-dashboard-api to have *succeeded in
+    # this same run* -- but when you dispatch target=frontend on its own
+    # (dashboard-api already deployed in an earlier run), deploy-dashboard-api
+    # is intentionally skipped this time, and "skipped" isn't "success", so
+    # without the explicit result check below this job would silently skip
+    # too. always() + the explicit success-or-skipped check restores the
+    # intended behavior: run whenever frontend was requested, as long as
+    # dashboard-api didn't outright fail in this run.
+    if: |
+      always() &&
+      contains(fromJSON('["all","frontend"]'), github.event.inputs.target) &&
+      (needs.deploy-dashboard-api.result == 'success' || needs.deploy-dashboard-api.result == 'skipped')
     needs: deploy-dashboard-api
     runs-on: ubuntu-latest
     permissions: { contents: read, id-token: write }
