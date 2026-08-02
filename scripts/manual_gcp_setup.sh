@@ -89,12 +89,15 @@ if [ "$ENABLE_CLOUD_RUN" = "true" ]; then
   gcloud beta services identity create --service=eventarc.googleapis.com --project="$PROJECT_ID" >/dev/null
 
   echo "-- Granting the GCS service agent Pub/Sub publish rights (one-time project prereq for ANY GCS-triggered Eventarc trigger -- doc-parser, ingest) --"
-  # The GCS service agent email is always PROJECT_NUMBER@gs-project-accounts.iam.gserviceaccount.com.
-  # Even after the service-agent command above returns, IAM sometimes takes a
-  # little while to recognize the newly-provisioned identity -- retry a few
-  # times with a short wait instead of failing outright on the first race.
+  # The GCS service agent email is service-PROJECT_NUMBER@gs-project-accounts.iam.gserviceaccount.com
+  # -- note the "service-" prefix. An earlier version of this script omitted
+  # it (just PROJECT_NUMBER@...), which always failed with "Service account
+  # ... does not exist" no matter how long we waited -- confirmed via `gsutil
+  # kms serviceaccount -p PROJECT_ID`, which prints the real email and made
+  # the missing prefix obvious. Keeping the retry loop anyway in case of
+  # genuine propagation delay on a brand-new project.
   PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
-  GCS_AGENT="serviceAccount:${PROJECT_NUMBER}@gs-project-accounts.iam.gserviceaccount.com"
+  GCS_AGENT="serviceAccount:service-${PROJECT_NUMBER}@gs-project-accounts.iam.gserviceaccount.com"
   attempt=1
   until gcloud projects add-iam-policy-binding "$PROJECT_ID" \
       --member="$GCS_AGENT" --role="roles/pubsub.publisher" --condition=None >/dev/null 2>/tmp/gcs_agent_grant_err; do
