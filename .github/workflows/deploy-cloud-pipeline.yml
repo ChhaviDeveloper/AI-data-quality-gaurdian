@@ -121,21 +121,18 @@ jobs:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
       - uses: google-github-actions/setup-gcloud@v2
-      - name: Build validator image
+      # `gcloud builds submit` (standalone Cloud Build CLI) keeps failing even
+      # with --suppress-logs and roles/logging.viewer granted -- it insists on
+      # polling build status in a way that needs project Viewer/Owner. `gcloud
+      # run jobs deploy --source` builds through the *Cloud Run* API instead
+      # (same mechanism `gcloud run deploy --source` already uses successfully
+      # for dashboard-api/frontend/etc.), which doesn't hit that code path, and
+      # it creates-or-updates in one idempotent command, no describe-then-branch
+      # dance needed.
+      - name: Build + deploy validator job
         run: |
-          # --suppress-logs: the deployer SA can submit/poll the build fine but
-          # isn't a project Viewer/Owner, which is what gcloud needs just to
-          # *stream* live logs back to this terminal -- without it, the CLI
-          # errors out trying to tail output even when the build itself is
-          # fine. Suppressing streaming avoids that false failure entirely.
-          gcloud builds submit services/validator \
-            --project ${{ env.PROJECT_ID }} --suppress-logs \
-            --tag ${{ env.AR_REPO }}/validator:${{ github.sha }}
-      - name: Create or update validator job
-        run: |
-          gcloud run jobs describe validator --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} >/dev/null 2>&1 && ACTION=update || ACTION=create
-          gcloud run jobs $ACTION validator \
-            --image ${{ env.AR_REPO }}/validator:${{ github.sha }} \
+          gcloud run jobs deploy validator \
+            --source services/validator \
             --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} \
             --service-account ${{ env.RUNTIME_SA_EMAIL }} \
             --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},RULES_REGISTRY_PATH=gs://${{ env.BUCKET_NAME }}/specs/rules_registry.yaml,TARGET_TABLE_REGISTRY_PATH=gs://${{ env.BUCKET_NAME }}/specs/target_table_registry.yaml
@@ -151,16 +148,10 @@ jobs:
           workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
       - uses: google-github-actions/setup-gcloud@v2
-      - name: Build ai-proposals image
+      - name: Build + deploy ai-proposals job
         run: |
-          gcloud builds submit services/ai-proposals \
-            --project ${{ env.PROJECT_ID }} --suppress-logs \
-            --tag ${{ env.AR_REPO }}/ai-proposals:${{ github.sha }}
-      - name: Create or update ai-proposals job
-        run: |
-          gcloud run jobs describe ai-proposals --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} >/dev/null 2>&1 && ACTION=update || ACTION=create
-          gcloud run jobs $ACTION ai-proposals \
-            --image ${{ env.AR_REPO }}/ai-proposals:${{ github.sha }} \
+          gcloud run jobs deploy ai-proposals \
+            --source services/ai-proposals \
             --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} \
             --service-account ${{ env.RUNTIME_SA_EMAIL }} \
             --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},GCP_REGION=us-central1
@@ -204,16 +195,16 @@ jobs:
             --event-filters "bucket=${{ env.BUCKET_NAME }}" \
             --service-account ${{ env.RUNTIME_SA_EMAIL }}
 
-      - name: Build job-trigger image (shared by both instances below)
-        run: |
-          gcloud builds submit services/job-trigger \
-            --project ${{ env.PROJECT_ID }} --suppress-logs \
-            --tag ${{ env.AR_REPO }}/job-trigger:${{ github.sha }}
-
+      # Each deploy below builds services/job-trigger itself via `--source`
+      # (same Cloud Run build path as dashboard-api/frontend, which works
+      # without needing project Viewer/Owner) rather than a separate
+      # `gcloud builds submit` + shared --image tag -- costs one extra build
+      # since it's not shared between the two deploys below, but sidesteps
+      # the builds-submit permission issue entirely.
       - name: Deploy trigger-validator (staging-loaded -> validator job)
         run: |
           gcloud run deploy trigger-validator \
-            --image ${{ env.AR_REPO }}/job-trigger:${{ github.sha }} \
+            --source services/job-trigger \
             --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} \
             --service-account ${{ env.RUNTIME_SA_EMAIL }} --no-allow-unauthenticated \
             --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},TARGET_JOB_NAME=validator,TARGET_REGION=${{ env.REGION }},ENV_OVERRIDE_KEYS=batch_id=BATCH_ID
@@ -228,7 +219,7 @@ jobs:
       - name: Deploy trigger-ai-proposals (validation-complete -> ai-proposals job)
         run: |
           gcloud run deploy trigger-ai-proposals \
-            --image ${{ env.AR_REPO }}/job-trigger:${{ github.sha }} \
+            --source services/job-trigger \
             --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} \
             --service-account ${{ env.RUNTIME_SA_EMAIL }} --no-allow-unauthenticated \
             --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},TARGET_JOB_NAME=ai-proposals,TARGET_REGION=${{ env.REGION }},ENV_OVERRIDE_KEYS=run_id=RUN_ID
