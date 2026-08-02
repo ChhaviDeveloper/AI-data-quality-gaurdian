@@ -258,7 +258,7 @@ jobs:
             --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} \
             --service-account ${{ env.RUNTIME_SA_EMAIL }} \
             --allow-unauthenticated \
-            --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},BQ_DATASET=audit_controls,GCP_REGION=us-central1
+            --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},BQ_DATASET=audit_controls,GCP_REGION=us-central1,BUCKET=${{ env.BUCKET_NAME }}
 
   deploy-frontend:
     if: ${{ contains(fromJSON('["all","frontend"]'), github.event.inputs.target) }}

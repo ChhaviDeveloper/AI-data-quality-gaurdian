@@ -82,6 +82,9 @@ for topic in staging-loaded validation-complete new-proposal; do
 done
 
 if [ "$ENABLE_CLOUD_RUN" = "true" ]; then
+  echo "-- Ensuring the GCS service agent exists (it's provisioned lazily -- doesn't exist until something forces it) --"
+  gcloud storage service-agent --project="$PROJECT_ID" >/dev/null
+
   echo "-- Granting the GCS service agent Pub/Sub publish rights (one-time project prereq for ANY GCS-triggered Eventarc trigger -- doc-parser, ingest) --"
   # The GCS service agent email is always PROJECT_NUMBER@gs-project-accounts.iam.gserviceaccount.com
   PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')

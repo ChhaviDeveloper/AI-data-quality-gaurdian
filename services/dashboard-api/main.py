@@ -49,8 +49,26 @@ CORS(app, origins=os.environ.get("ALLOWED_ORIGIN", "*"))
 # -- see /api/ingest. We reuse those scripts as-is (subprocess) rather than
 # importing across service directories, matching this repo's existing
 # "each service stays self-contained" pattern (see gemini_helper.py).
+#
+# This only works when dashboard-api runs from a full repo checkout (local
+# execution -- see README "Local-only execution"), where the sibling
+# services/ingest, services/validator, services/ai-proposals directories are
+# actually present on disk. Once dashboard-api is deployed as its own
+# isolated Cloud Run container (`gcloud run deploy --source
+# services/dashboard-api`), the built image only contains this directory --
+# those sibling scripts don't exist inside it. _local_pipeline_available()
+# below detects which situation we're in and /api/ingest branches
+# accordingly: local -> subprocess orchestration (synchronous, returns a
+# DQ score immediately); deployed -> upload straight into the GCS bucket's
+# incoming/ prefix and let the Eventarc-triggered pipeline (already deployed
+# via deploy-triggers) pick it up and process it asynchronously instead.
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 UPLOAD_SUBPROCESS_TIMEOUT = int(os.environ.get("UPLOAD_SUBPROCESS_TIMEOUT", "180"))
+BUCKET_NAME = os.environ.get("BUCKET", f"{bq.BQ_PROJECT}-dq-bucket")
+
+
+def _local_pipeline_available() -> bool:
+    return os.path.isfile(os.path.join(REPO_ROOT, "services", "ingest", "main.py"))
 
 # Severity -> dashboard bucket, matching the 3-bucket summary tile layout
 # (Critical Issues / Warnings / Info) on top of the 4-level Critical/High/
@@ -221,6 +239,9 @@ def ingest_dataset():
     tmp_path = os.path.join(tmp_dir, upload.filename)
     upload.save(tmp_path)
 
+    if not _local_pipeline_available():
+        return _ingest_via_gcs_upload(upload.filename, tmp_path)
+
     child_env = {**os.environ, "BQ_PROJECT": bq.BQ_PROJECT, "BQ_DATASET": bq.BQ_DATASET}
 
     logger.info("Ingesting uploaded file %s", upload.filename)
@@ -283,6 +304,36 @@ def ingest_dataset():
         "new_proposals": new_proposals,
         "dataset_name": upload.filename,
     }), 201
+
+
+def _ingest_via_gcs_upload(filename: str, tmp_path: str):
+    """Cloud Run deployed-container path: no sibling scripts on disk, so
+    upload straight to gs://<bucket>/incoming/ instead and let the
+    already-deployed Eventarc pipeline (ingest-trigger -> ingest ->
+    staging-loaded -> trigger-validator -> validator job -> ... ) process it.
+    Asynchronous -- there's no DQ score to return yet, just a confirmation
+    the file is on its way through the pipeline."""
+    from google.cloud import storage
+
+    unique_name = f"{uuid.uuid4().hex[:8]}_{filename}"
+    blob_path = f"incoming/{unique_name}"
+    try:
+        client = storage.Client(project=bq.BQ_PROJECT)
+        blob = client.bucket(BUCKET_NAME).blob(blob_path)
+        blob.upload_from_filename(tmp_path)
+    except Exception:
+        logger.exception("Could not upload %s to gs://%s/%s", filename, BUCKET_NAME, blob_path)
+        return jsonify({"error": f"Could not upload to gs://{BUCKET_NAME}/{blob_path}"}), 500
+
+    return jsonify({
+        "mode": "async",
+        "gcs_uri": f"gs://{BUCKET_NAME}/{blob_path}",
+        "message": (
+            "Uploaded to Cloud Storage. The ingest -> validator -> ai-proposals -> notifier "
+            "pipeline will run automatically via Eventarc, usually within a few seconds to a "
+            "minute. Refresh the Datasets or Overview page shortly to see results."
+        ),
+    }), 202
 
 
 @app.get("/api/analytics/trend")

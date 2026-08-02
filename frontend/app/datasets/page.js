@@ -26,13 +26,17 @@ export default function DatasetsPage() {
     setStatus({ type: "info", message: `Ingesting ${file.name}...` });
     try {
       const result = await uploadDataset(file, (msg) => setStatus({ type: "info", message: msg }));
-      const scoreText = result.dq_score != null ? `${result.dq_score}% DQ score` : "score pending";
-      const proposalsText = result.new_proposals ? `, ${result.new_proposals} new rule proposal(s)` : "";
-      setStatus({
-        type: "success",
-        message: `Done -- batch ${result.batch_id.slice(0, 8)}... validated, ${scoreText}${proposalsText}. ` +
-                 `Check Overview / Data Quality Issues for results.`,
-      });
+      if (result.mode === "async") {
+        setStatus({ type: "success", message: result.message || "Uploaded -- processing automatically in the cloud." });
+      } else {
+        const scoreText = result.dq_score != null ? `${result.dq_score}% DQ score` : "score pending";
+        const proposalsText = result.new_proposals ? `, ${result.new_proposals} new rule proposal(s)` : "";
+        setStatus({
+          type: "success",
+          message: `Done -- batch ${result.batch_id.slice(0, 8)}... validated, ${scoreText}${proposalsText}. ` +
+                   `Check Overview / Data Quality Issues for results.`,
+        });
+      }
       refresh();
     } catch (err) {
       setStatus({ type: "error", message: err.message || "Upload failed." });
