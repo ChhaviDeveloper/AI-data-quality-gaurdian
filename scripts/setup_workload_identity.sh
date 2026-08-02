@@ -55,6 +55,11 @@ gcloud iam service-accounts create "$DEPLOYER_SA_NAME" \
   --display-name="GitHub Actions deployer" 2>/dev/null || echo "   deployer SA already exists"
 
 echo "-- Granting deployer SA the roles it needs to build/deploy everything --"
+# roles/logging.viewer: `gcloud builds submit` needs the caller to be able
+# to read Cloud Build's status/logs just to poll "is the build done yet" --
+# without it, the command errors out with "This tool can only stream logs
+# if you are Viewer/Owner of the project", even though cloudbuild.builds.editor
+# alone is enough to actually submit and run the build.
 for role in \
   roles/run.admin \
   roles/storage.admin \
@@ -63,7 +68,8 @@ for role in \
   roles/eventarc.admin \
   roles/artifactregistry.admin \
   roles/cloudbuild.builds.editor \
-  roles/iam.serviceAccountUser
+  roles/iam.serviceAccountUser \
+  roles/logging.viewer
 do
   gcloud projects add-iam-policy-binding "$PROJECT_ID" \
     --member="serviceAccount:${DEPLOYER_SA_EMAIL}" \
