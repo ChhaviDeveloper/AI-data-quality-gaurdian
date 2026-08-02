@@ -123,8 +123,13 @@ jobs:
       - uses: google-github-actions/setup-gcloud@v2
       - name: Build validator image
         run: |
+          # --suppress-logs: the deployer SA can submit/poll the build fine but
+          # isn't a project Viewer/Owner, which is what gcloud needs just to
+          # *stream* live logs back to this terminal -- without it, the CLI
+          # errors out trying to tail output even when the build itself is
+          # fine. Suppressing streaming avoids that false failure entirely.
           gcloud builds submit services/validator \
-            --project ${{ env.PROJECT_ID }} \
+            --project ${{ env.PROJECT_ID }} --suppress-logs \
             --tag ${{ env.AR_REPO }}/validator:${{ github.sha }}
       - name: Create or update validator job
         run: |
@@ -149,7 +154,7 @@ jobs:
       - name: Build ai-proposals image
         run: |
           gcloud builds submit services/ai-proposals \
-            --project ${{ env.PROJECT_ID }} \
+            --project ${{ env.PROJECT_ID }} --suppress-logs \
             --tag ${{ env.AR_REPO }}/ai-proposals:${{ github.sha }}
       - name: Create or update ai-proposals job
         run: |
@@ -202,7 +207,7 @@ jobs:
       - name: Build job-trigger image (shared by both instances below)
         run: |
           gcloud builds submit services/job-trigger \
-            --project ${{ env.PROJECT_ID }} \
+            --project ${{ env.PROJECT_ID }} --suppress-logs \
             --tag ${{ env.AR_REPO }}/job-trigger:${{ github.sha }}
 
       - name: Deploy trigger-validator (staging-loaded -> validator job)
