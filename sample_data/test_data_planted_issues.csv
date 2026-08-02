@@ -1,0 +1,32 @@
+application_id,application_name,business_owner,technology_owner,criticality,data_classification,regulatory_scope,audit_year,last_control_test_date,evidence_submitted,evidence_submission_date,access_review_completed,access_review_date,privileged_access_count,privileged_access_approved,mfa_enabled,encryption_at_rest,backup_enabled,dr_test_completed,dr_test_date,vulnerability_status,open_high_vulnerabilities,policy_exception,exception_expiry_date,app_status,source_system
+APP-301,Core Banking Ledger,Anita Desai,Rohit Malhotra,Critical,Confidential,SOX,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,2,Yes,Yes,Yes,Yes,Yes,20-07-2026,No Critical Open,0,No,,Active,CMDB
+APP-302,Regulatory Reporting Hub,Karan Bhatt,Divya Menon,High,Restricted,RBI,2026,14-07-2026,Yes,15-07-2026,Yes,15-07-2026,1,Yes,Yes,Yes,Yes,Yes,18-07-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-303,Customer Self-Service Portal,Neha Kapoor,Arjun Verma,Medium,Internal,None,2026,13-07-2026,No,,No,,0,No,Yes,No,No,No,,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-304,Marketing Analytics,Priya Nair,Suresh Pillai,Low,Public,None,2026,12-07-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Active,CMDB
+APP-305,Trade Settlement Engine,Vikram Joshi,Meena Rao,Critical,Confidential,SEBI,2026,17-07-2026,Yes,18-07-2026,Yes,18-07-2026,3,Yes,Yes,Yes,Yes,Yes,21-07-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-306,HR Payroll System,Sanjay Kumar,Ritu Singh,High,Restricted,Internal Audit,2026,16-07-2026,Yes,17-07-2026,Yes,17-07-2026,1,Yes,Yes,Yes,Yes,Yes,19-07-2026,No Critical Open,0,No,,Active,CMDB
+APP-307,Vendor Management Portal,Deepak Chawla,Alok Nair,Medium,Internal,None,2026,11-07-2026,Yes,12-07-2026,Yes,12-07-2026,0,Yes,Yes,Yes,No,No,,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-308,Archived Legacy CRM,Unassigned,Unassigned,Low,Public,None,2025,01-03-2025,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Retired,CMDB
+APP-309,Fraud Detection Engine,Ritika Shah,Manoj Tiwari,Critical,Confidential,Internal Audit,2026,19-07-2026,Yes,20-07-2026,Yes,20-07-2026,2,Yes,Yes,Yes,Yes,Yes,22-07-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-310,Employee Self Service,Alka Verma,Nitin Sharma,Medium,Internal,None,2026,10-07-2026,Yes,11-07-2026,Yes,11-07-2026,1,Yes,Yes,Yes,Yes,Yes,15-07-2026,No Critical Open,0,No,,Active,CMDB
+,Blank Application ID Test,Farah Khan,Imran Ali,Critical,Confidential,SOX,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,2,Yes,Yes,Yes,Yes,Yes,20-07-2026,No Critical Open,0,No,,Active,CMDB
+APP-350,Duplicate ID Test A,Farhan Sheikh,Kavita Rao,Medium,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,Yes,Yes,No,No,,No Critical Open,0,No,,Active,CMDB
+APP-350,Duplicate ID Test B,Farhan Sheikh,Kavita Rao,Medium,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,Yes,Yes,No,No,,No Critical Open,0,No,,Active,CMDB
+APP-311,Missing Owner Test,,Kiran Desai,Low,Internal,None,2026,15-07-2026,No,,No,,0,No,No,No,No,No,,No Critical Open,0,No,,Active,CMDB
+APP-312,Invalid Criticality Test,Manav Oberoi,Sneha Iyer,Severe,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,Yes,Yes,No,No,,No Critical Open,0,No,,Active,CMDB
+APP-313,Inconsistent Casing Criticality Test,Tarun Mehta,Pallavi Rao,critical,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,Yes,Yes,No,No,,No Critical Open,0,No,,Active,CMDB
+APP-314,Invalid YesNo Value Test,Ishaan Kapoor,Ananya Ghosh,Medium,Internal,None,2026,15-07-2026,Maybe,16-07-2026,Yes,16-07-2026,0,Yes,Yes,Yes,No,No,,No Critical Open,0,No,,Active,CMDB
+APP-315,Evidence Missing SOX Test,Rajesh Nanda,Swati Kulkarni,Medium,Internal,SOX,2026,15-07-2026,No,,Yes,16-07-2026,0,Yes,Yes,Yes,No,No,,No Critical Open,0,No,,Active,CMDB
+APP-316,Access Review Missing Test,Abhinav Rao,Pooja Deshmukh,Critical,Internal,None,2026,15-07-2026,Yes,16-07-2026,No,,0,Yes,Yes,Yes,Yes,Yes,18-07-2026,No Critical Open,0,No,,Active,CMDB
+APP-317,Privileged Access Not Approved Test,Varun Malhotra,Shreya Bansal,Medium,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,3,No,Yes,Yes,No,No,,No Critical Open,0,No,,Active,CMDB
+APP-318,MFA Disabled Test,Aman Gupta,Ritika Menon,High,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,No,Yes,Yes,Yes,18-07-2026,No Critical Open,0,No,,Active,CMDB
+APP-319,Encryption Disabled Test,Nikhil Bhatia,Kavya Reddy,Medium,Restricted,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,Yes,No,No,No,,No Critical Open,0,No,,Active,CMDB
+APP-320,Backup Disabled Test,Siddharth Rao,Meenal Joshi,Critical,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,Yes,Yes,No,Yes,18-07-2026,No Critical Open,0,No,,Active,CMDB
+APP-321,DR Test Missing Test,Harshita Singh,Rohan Kapoor,Critical,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,Yes,Yes,Yes,No,,No Critical Open,0,No,,Active,CMDB
+APP-322,Unapproved Vulnerability Test,Yash Trivedi,Bhavna Iyer,Medium,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,Yes,Yes,No,No,,Critical Open,3,No,,Active,CMDB
+APP-323,Exception Expiry Missing Test,Devika Nair,Arvind Menon,Medium,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,Yes,Yes,No,No,,No Critical Open,0,Yes,,Active,CMDB
+APP-324,Exception Expired Test,Om Prakash,Riya Chatterjee,Medium,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,Yes,Yes,No,No,,No Critical Open,0,Yes,15-01-2026,Active,CMDB
+APP-325,Future DR Date Test,Kunal Saxena,Isha Bhardwaj,Critical,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,Yes,Yes,Yes,Yes,25-01-2027,No Critical Open,0,No,,Active,CMDB
+APP-326,Backup Without Encryption Test,Tanya Verma,Aditya Rao,Medium,Internal,None,2026,15-07-2026,Yes,16-07-2026,Yes,16-07-2026,0,Yes,Yes,No,Yes,No,,No Critical Open,0,No,,Active,CMDB
+APP-330,Messy Legacy Trading App,Rakesh Iyer,,Critical,Confidential,SOX,2026,05-06-2026,No,,No,,4,No,No,No,No,No,,Critical Open,5,Yes,20-02-2026,Active,CMDB
+APP-331,Partner Integration Gateway,Divya Kulkarni,Rohit Bansal,High,Restricted,RBI,2026,14-07-2026,Yes,15-07-2026,Yes,15-07-2026,1,Yes,No,Yes,No,Yes,17-07-2026,No Critical Open,0,No,,Active,CMDB

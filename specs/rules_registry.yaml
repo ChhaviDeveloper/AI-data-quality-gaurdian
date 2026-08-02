@@ -19,10 +19,13 @@ rules:
   severity: Critical
   dimension: Completeness
   type: expression
-  expression: app_status == 'Active' and (business_owner == '' or technology_owner
-    == '')
+  expression: app_status == 'Active' and (business_owner == '' or business_owner.isnull()
+    or technology_owner == '' or technology_owner.isnull())
   description: business_owner and technology_owner must be populated for all active
-    applications.
+    applications. (Fixed 2026-08-03 -- the original expression only matched literal
+    empty strings, not the NaN pandas produces for genuinely blank CSV cells, so
+    real missing-owner data silently passed. Caught via a deliberately messy test
+    dataset, sample_data/test_data_planted_issues.csv.)
 - rule_id: R004
   rule_name: Valid Criticality
   severity: High
