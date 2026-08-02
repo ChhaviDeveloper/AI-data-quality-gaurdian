@@ -173,6 +173,10 @@ If your billing account can't (or you don't want to) unlock Cloud Run/Cloud Buil
 
 Re-running steps 3-6 with a new CSV re-validates and re-mines, same as the Cloud Run pipeline would -- you're just triggering each step by hand instead of Eventarc/Pub-Sub doing it automatically. `job-trigger` isn't needed at all in this mode (it only exists to bridge Pub/Sub -> Cloud Run Jobs).
 
+**Important: run steps 7 and 8 on the *same machine*.** The frontend is a client-side app (`"use client"` pages) -- its `fetch("http://localhost:8080/...")` calls run in *your browser*, not wherever the Next.js dev server happens to be hosted. If you run the frontend in Cloud Shell and open it via Web Preview in your laptop's browser, `localhost:8080` resolves to your laptop (which has nothing listening there), not the Cloud Shell VM -- every API call silently fails and the UI falls back to the bundled mock data (`frontend/lib/mockData.js`), which looks fine but isn't real. For a live demo, run both services 7 and 8 directly on your laptop (clone the repo there, `gcloud auth application-default login`, same commands as above) so `localhost` means the same machine for both.
+
+**Uploading a new dataset from the dashboard itself** (no terminal needed once steps 1-2 and 7-8 are running): open the **Datasets** page and drag a CSV onto the dropzone. This calls `POST /api/ingest` on `dashboard-api`, which runs ingest -> validator -> ai-proposals as subprocesses of the same scripts from steps 3-5, against real BigQuery, and returns the new batch's DQ score. Equivalent to steps 3-5 by hand, just from the UI.
+
 ## Deploying
 
 1. **GCS bucket + BigQuery tables + Pub/Sub topics** -- two equivalent options, pick one (not both):
@@ -214,6 +218,7 @@ The Analytics page embeds a Looker Studio report via `NEXT_PUBLIC_LOOKER_EMBED_U
 
 ## Not done yet / explicitly out of scope for this pass
 
-- The Looker Studio *report itself* isn't built -- report creation needs your Google account in the Looker Studio UI (see setup steps above); everything it needs on the data side (the views) already exists.
+- The Looker Studio *report itself* isn't built -- report creation needs your Google account in the Looker Studio UI (see setup steps above). Not required, though: the Analytics page now renders its own charts (confidence trend + issues-by-severity) directly from `v_dq_confidence_trend`/`v_dq_issue_overview` via `dashboard-api`, so Looker Studio is optional polish, not a dependency.
 - `services/notifier` mail provider (see above).
 - Root-cause / remediation-recommendation Gemini calls in `dashboard-api` aren't cached anywhere except `remediation_actions` -- repeated "Root Cause" clicks on the same issue re-call Gemini each time (fine for a hackathon demo; add caching before scaling usage).
+- `POST /api/ingest` (Datasets page upload) runs ingest/validator/ai-proposals synchronously and can take up to ~a minute for larger files or slow Gemini responses -- there's no progress streaming, just a single "done" response at the end.

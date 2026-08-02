@@ -84,4 +84,34 @@ export async function getRootCause(ruleId, runId) {
   );
 }
 
+export async function getAnalyticsTrend() {
+  return getJson("/api/analytics/trend", []);
+}
+
+export async function getAnalyticsIssueOverview() {
+  return getJson("/api/analytics/issue-overview", []);
+}
+
+// Uploads a CSV and runs the full ingest -> validator -> ai-proposals
+// pipeline against it. Unlike the getters above, this has no mock fallback
+// -- it needs a real dashboard-api to do anything, so we throw instead of
+// silently pretending to succeed.
+export async function uploadDataset(file, onStatus) {
+  if (!API_BASE) {
+    throw new Error(
+      "No dashboard-api configured (NEXT_PUBLIC_API_BASE_URL is unset). " +
+      "Set it in frontend/.env.local and restart the dev server."
+    );
+  }
+  onStatus?.("Uploading and ingesting...");
+  const form = new FormData();
+  form.append("file", file);
+  const res = await fetch(`${API_BASE}/api/ingest`, { method: "POST", body: form });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(body.error || body.details || `Upload failed (${res.status})`);
+  }
+  return body;
+}
+
 export const isLiveMode = () => Boolean(API_BASE);

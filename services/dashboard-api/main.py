@@ -24,8 +24,12 @@ Local run (needs Application Default Credentials with BigQuery read access):
   python main.py
 """
 import os
+import re
+import sys
 import uuid
 import logging
+import tempfile
+import subprocess
 from datetime import datetime, timezone
 
 from flask import Flask, jsonify, request
@@ -39,6 +43,14 @@ logger = logging.getLogger("dashboard-api")
 
 app = Flask(__name__)
 CORS(app, origins=os.environ.get("ALLOWED_ORIGIN", "*"))
+
+# services/dashboard-api -> services -> <repo root>. Used to shell out to the
+# sibling ingest/validator/ai-proposals CLI scripts for the upload flow below
+# -- see /api/ingest. We reuse those scripts as-is (subprocess) rather than
+# importing across service directories, matching this repo's existing
+# "each service stays self-contained" pattern (see gemini_helper.py).
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+UPLOAD_SUBPROCESS_TIMEOUT = int(os.environ.get("UPLOAD_SUBPROCESS_TIMEOUT", "180"))
 
 # Severity -> dashboard bucket, matching the 3-bucket summary tile layout
 # (Critical Issues / Warnings / Info) on top of the 4-level Critical/High/
@@ -188,6 +200,101 @@ def accept_issue(rule_id):
     }
     bq.insert_row("remediation_actions", row)
     return jsonify(row), 201
+
+
+@app.post("/api/ingest")
+def ingest_dataset():
+    """Upload a CSV straight from the dashboard and run the whole local
+    pipeline against it: ingest -> validator -> ai-proposals, in that order,
+    each as a subprocess of the sibling service script (same code path
+    proven out via the CLI walkthrough in the README). Synchronous -- the
+    request blocks until all three steps finish, so the frontend should show
+    a loading state for anywhere from ~10-60s depending on Gemini latency.
+    """
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded (expected multipart field 'file')"}), 400
+    upload = request.files["file"]
+    if not upload.filename or not upload.filename.lower().endswith(".csv"):
+        return jsonify({"error": "Only .csv files are supported"}), 400
+
+    tmp_dir = tempfile.mkdtemp(prefix="dq_upload_")
+    tmp_path = os.path.join(tmp_dir, upload.filename)
+    upload.save(tmp_path)
+
+    child_env = {**os.environ, "BQ_PROJECT": bq.BQ_PROJECT, "BQ_DATASET": bq.BQ_DATASET}
+
+    logger.info("Ingesting uploaded file %s", upload.filename)
+    ingest_result = subprocess.run(
+        [sys.executable, "main.py", "--local-csv", tmp_path, "--local-to-bq"],
+        cwd=os.path.join(REPO_ROOT, "services", "ingest"),
+        capture_output=True, text=True, env=child_env, timeout=UPLOAD_SUBPROCESS_TIMEOUT,
+    )
+    if ingest_result.returncode != 0:
+        logger.error("ingest failed: %s", ingest_result.stderr[-4000:])
+        return jsonify({"error": "Ingest step failed", "details": ingest_result.stderr[-4000:]}), 500
+
+    batch_match = re.search(r"batch_id=([0-9a-fA-F-]+)", ingest_result.stdout)
+    if not batch_match:
+        return jsonify({"error": "Ingest ran but no batch_id was found in its output", "stdout": ingest_result.stdout}), 500
+    batch_id = batch_match.group(1)
+
+    logger.info("Validating batch_id=%s", batch_id)
+    validator_result = subprocess.run(
+        [sys.executable, "main.py"],
+        cwd=os.path.join(REPO_ROOT, "services", "validator"),
+        capture_output=True, text=True, timeout=UPLOAD_SUBPROCESS_TIMEOUT,
+        env={**child_env, "BATCH_ID": batch_id},
+    )
+    validator_log = validator_result.stdout + validator_result.stderr
+    if validator_result.returncode != 0:
+        logger.error("validator failed: %s", validator_result.stderr[-4000:])
+        return jsonify({
+            "batch_id": batch_id,
+            "error": "Ingest succeeded but validation failed",
+            "details": validator_result.stderr[-4000:],
+        }), 207
+
+    run_match = re.search(r"Run ([0-9a-fA-F-]+) complete", validator_log)
+    score_match = re.search(r"DQ score:\s*([\d.]+)%", validator_log)
+    run_id = run_match.group(1) if run_match else None
+    dq_score = float(score_match.group(1)) if score_match else None
+
+    logger.info("Mining new rule proposals for run_id=%s", run_id)
+    new_proposals = None
+    try:
+        proposals_result = subprocess.run(
+            [sys.executable, "main.py"],
+            cwd=os.path.join(REPO_ROOT, "services", "ai-proposals"),
+            capture_output=True, text=True, env=child_env, timeout=UPLOAD_SUBPROCESS_TIMEOUT,
+        )
+        proposals_log = proposals_result.stdout + proposals_result.stderr
+        if proposals_result.returncode == 0:
+            pm = re.search(r"Wrote (\d+) new proposal", proposals_log)
+            new_proposals = int(pm.group(1)) if pm else 0
+        else:
+            logger.warning("ai-proposals step failed (non-fatal): %s", proposals_result.stderr[-2000:])
+    except Exception:
+        logger.exception("ai-proposals step raised (non-fatal)")
+
+    return jsonify({
+        "batch_id": batch_id,
+        "run_id": run_id,
+        "dq_score": dq_score,
+        "new_proposals": new_proposals,
+        "dataset_name": upload.filename,
+    }), 201
+
+
+@app.get("/api/analytics/trend")
+def analytics_trend():
+    rows = bq.query(f"SELECT * FROM {bq.table('v_dq_confidence_trend')} ORDER BY run_timestamp ASC")
+    return jsonify(rows)
+
+
+@app.get("/api/analytics/issue-overview")
+def analytics_issue_overview():
+    rows = bq.query(f"SELECT * FROM {bq.table('v_dq_issue_overview')}")
+    return jsonify(rows)
 
 
 @app.get("/api/regulations")

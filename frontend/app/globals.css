@@ -240,3 +240,27 @@ tr:last-child td { border-bottom: none; }
 .modal .muted { color: var(--muted); font-size: 12px; }
 
 .empty-state { color: var(--muted); font-size: 13px; padding: 20px; text-align: center; }
+
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 28px 18px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.dropzone.active { border-color: var(--blue); background: #eef3fe; color: var(--blue); }
+.dropzone strong { color: var(--text); }
+.dropzone.active strong { color: var(--blue); }
+
+.upload-status {
+  margin-top: 12px;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+.upload-status.info { background: #eef3fe; color: var(--blue); }
+.upload-status.error { background: #fdeceb; color: var(--red); }
+.upload-status.success { background: #eafaf1; color: var(--green); }
