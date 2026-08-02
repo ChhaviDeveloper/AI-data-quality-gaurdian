@@ -86,11 +86,27 @@ if [ "$ENABLE_CLOUD_RUN" = "true" ]; then
   gcloud storage service-agent --project="$PROJECT_ID" >/dev/null
 
   echo "-- Granting the GCS service agent Pub/Sub publish rights (one-time project prereq for ANY GCS-triggered Eventarc trigger -- doc-parser, ingest) --"
-  # The GCS service agent email is always PROJECT_NUMBER@gs-project-accounts.iam.gserviceaccount.com
+  # The GCS service agent email is always PROJECT_NUMBER@gs-project-accounts.iam.gserviceaccount.com.
+  # Even after the service-agent command above returns, IAM sometimes takes a
+  # little while to recognize the newly-provisioned identity -- retry a few
+  # times with a short wait instead of failing outright on the first race.
   PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
-  gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-    --member="serviceAccount:${PROJECT_NUMBER}@gs-project-accounts.iam.gserviceaccount.com" \
-    --role="roles/pubsub.publisher" --condition=None >/dev/null
+  GCS_AGENT="serviceAccount:${PROJECT_NUMBER}@gs-project-accounts.iam.gserviceaccount.com"
+  attempt=1
+  until gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+      --member="$GCS_AGENT" --role="roles/pubsub.publisher" --condition=None >/dev/null 2>/tmp/gcs_agent_grant_err; do
+    if [ "$attempt" -ge 6 ]; then
+      echo "   Still failing after $attempt attempts -- last error:"
+      cat /tmp/gcs_agent_grant_err
+      echo "   This only blocks the GCS-triggered Eventarc triggers (doc-parser-trigger, ingest-trigger)."
+      echo "   Everything else (dashboard-api, frontend, validator/ai-proposals jobs) is unaffected --"
+      echo "   safe to continue, then just re-run this script later to retry this one grant."
+      break
+    fi
+    echo "   Not ready yet (attempt $attempt/6) -- waiting 15s for the service agent to propagate..."
+    attempt=$((attempt + 1))
+    sleep 15
+  done
 else
   echo "-- Skipping GCS->Pub/Sub Eventarc IAM grant (only needed for Cloud Run triggers) --"
 fi
