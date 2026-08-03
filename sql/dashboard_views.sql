@@ -165,24 +165,29 @@ ORDER BY r.failed_count DESC;
 -- independently instead of lumping every affected application under a
 -- single rule-level status. Sourced from failed_records_detail (the actual
 -- per-record failures) rather than rule_execution_summary's aggregate
--- counts. DISTINCT on (failed_rule_id, application_id) because the same
--- application can legitimately appear more than once in failed_records_detail
--- for a single rule (e.g. R002 Application ID Uniqueness flags every
--- duplicate row sharing that id).
+-- counts. Grouped (not just SELECT DISTINCT'd) on (failed_rule_id,
+-- application_id) only -- application_id is the actual remediation key, so
+-- two failing records that share an application_id must collapse into one
+-- row even if their application_name differs (e.g. R002 Application ID
+-- Uniqueness deliberately pairs one application_id with two different
+-- application_name values to simulate a duplicate-ID data entry error --
+-- grouping on all of (rule_id, application_id, application_name) would
+-- wrongly split that single duplicate-ID issue into two rows).
 CREATE OR REPLACE VIEW `ringed-hearth-504112-e3.audit_controls.v_dq_issues_by_application` AS
 WITH latest AS (
   SELECT run_id FROM `ringed-hearth-504112-e3.audit_controls.rule_execution_summary`
   ORDER BY run_timestamp DESC LIMIT 1
 ),
 failed_apps AS (
-  SELECT DISTINCT
+  SELECT
     f.failed_rule_id AS rule_id,
     f.application_id,
-    f.application_name,
+    ANY_VALUE(f.application_name) AS application_name,
     f.run_id,
-    f.run_timestamp
+    ANY_VALUE(f.run_timestamp) AS run_timestamp
   FROM `ringed-hearth-504112-e3.audit_controls.failed_records_detail` f
   JOIN latest USING (run_id)
+  GROUP BY f.failed_rule_id, f.application_id, f.run_id
 ),
 latest_action AS (
   SELECT
