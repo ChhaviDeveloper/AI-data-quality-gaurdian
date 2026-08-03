@@ -21,8 +21,13 @@ export default function IssuesPage() {
     const key = issueKey(issue);
     setBusyKey(key);
     try {
-      await remediateIssue(issue.rule_id, issue.run_id, issue.application_id);
-      setIssues((prev) => prev.map((i) => issueKey(i) === key ? { ...i, remediation_status: "In Progress" } : i));
+      const result = await remediateIssue(issue.rule_id, issue.run_id, issue.application_id);
+      setIssues((prev) => prev.map((i) => issueKey(i) === key ? {
+        ...i,
+        remediation_status: "In Progress",
+        last_notified_email: result?.notified_email,
+        last_notification_status: result?.notification_status,
+      } : i));
     } finally { setBusyKey(null); }
   }
 
@@ -97,7 +102,18 @@ export default function IssuesPage() {
                     </button>
                   </div>
                 </td>
-                <td><StatusBadge status={issue.remediation_status || "Open"} /></td>
+                <td>
+                  <StatusBadge status={issue.remediation_status || "Open"} />
+                  {issue.last_notified_email && (
+                    <div
+                      style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}
+                      title={issue.last_notification_status || ""}
+                    >
+                      {issue.last_notification_status === "Sent" ? "✉ Notified: " : "✉ "}
+                      {issue.last_notified_email}
+                    </div>
+                  )}
+                </td>
               </tr>
             ))}
             {filtered.length === 0 && (

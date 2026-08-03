@@ -37,6 +37,7 @@ from flask_cors import CORS
 
 import bq
 import gemini_helper
+import email_helper
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("dashboard-api")
@@ -178,6 +179,26 @@ def remediate_issue(rule_id):
     issue = issue_rows[0]
 
     recommendation = gemini_helper.recommend_remediation(issue)
+
+    # Notify the product owner -- best-effort, never blocks the remediation
+    # action itself. See email_helper.py for the lookup/send/compose logic.
+    owner_email, matched_owner = email_helper.get_owner_contact(
+        issue.get("business_owner"), issue.get("technology_owner")
+    )
+    if owner_email:
+        sample_rows = bq.query(
+            f"""SELECT * FROM {bq.table('failed_records_detail')}
+                WHERE failed_rule_id = @rule_id AND application_id = @application_id {_and_run(run_id)}
+                LIMIT 1""",
+            params=_issue_params(rule_id, run_id, application_id),
+        )
+        email_content = email_helper.build_email(issue, recommendation, sample_rows[0] if sample_rows else None)
+        sent = email_helper.send_remediation_email(owner_email, email_content["subject"], email_content["body"])
+        notification_status = "Sent" if sent else "Failed"
+    else:
+        email_content = None
+        notification_status = "Skipped: no contact on file"
+
     now = datetime.now(timezone.utc)
     row = {
         "action_id": str(uuid.uuid4()),
@@ -194,6 +215,8 @@ def remediate_issue(rule_id):
         "initiated_at": now.isoformat(),
         "completed_at": None,
         "remediation_details": recommendation.get("remediation_type"),
+        "notified_email": owner_email,
+        "notification_status": notification_status,
     }
     bq.insert_row("remediation_actions", row)
     return jsonify(row), 201

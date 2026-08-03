@@ -147,16 +147,23 @@ CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.remediation_a
   initiated_by STRING,
   initiated_at TIMESTAMP NOT NULL,
   completed_at TIMESTAMP,
-  remediation_details STRING
+  remediation_details STRING,
+  notified_email STRING,     -- recipient the "Remediation Required" email was sent/attempted to
+  notification_status STRING -- 'Sent' | 'Failed' | 'Skipped: no contact on file' | 'Skipped: SMTP not configured' | NULL (Accept actions don't notify)
 )
 PARTITION BY DATE(initiated_at)
 CLUSTER BY run_id, rule_id, application_id;
 
 -- Migration for projects where remediation_actions already existed before
--- application_id was added (CREATE TABLE IF NOT EXISTS above is a no-op on
--- an existing table -- it won't add the new column). Safe to re-run.
+-- application_id/notified_email/notification_status were added (CREATE
+-- TABLE IF NOT EXISTS above is a no-op on an existing table -- it won't add
+-- new columns). Safe to re-run.
 ALTER TABLE `ringed-hearth-504112-e3.audit_controls.remediation_actions`
   ADD COLUMN IF NOT EXISTS application_id STRING;
+ALTER TABLE `ringed-hearth-504112-e3.audit_controls.remediation_actions`
+  ADD COLUMN IF NOT EXISTS notified_email STRING;
+ALTER TABLE `ringed-hearth-504112-e3.audit_controls.remediation_actions`
+  ADD COLUMN IF NOT EXISTS notification_status STRING;
 
 -- applicable_regulations: reference/config table, seeded from
 -- specs/applicable_regulations_seed.csv via
@@ -176,3 +183,18 @@ CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.applicable_re
   source_url STRING
 )
 CLUSTER BY country, regulation_code;
+
+-- owner_contacts: reference/config table, seeded from
+-- specs/owner_contacts_seed.csv via tools/load_owner_contacts_seed.py --
+-- same pattern as report_catalog/applicable_regulations. Maps the
+-- business_owner/technology_owner *names* that show up in the ingested
+-- audit CSV to a real email address, since the CSV itself only ever
+-- carries names. Looked up by dashboard-api's POST /remediate to decide
+-- who the "Data Quality Remediation Required" email goes to (business_owner
+-- checked first, technology_owner as fallback -- see email_helper.py).
+CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.owner_contacts` (
+  owner_name STRING NOT NULL,
+  email STRING NOT NULL,
+  note STRING
+)
+CLUSTER BY owner_name;

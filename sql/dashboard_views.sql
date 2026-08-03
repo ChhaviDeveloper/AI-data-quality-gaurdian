@@ -172,7 +172,10 @@ ORDER BY r.failed_count DESC;
 -- Uniqueness deliberately pairs one application_id with two different
 -- application_name values to simulate a duplicate-ID data entry error --
 -- grouping on all of (rule_id, application_id, application_name) would
--- wrongly split that single duplicate-ID issue into two rows).
+-- wrongly split that single duplicate-ID issue into two rows). Also carries
+-- business_owner/technology_owner through (ANY_VALUE, same reasoning) so
+-- dashboard-api's POST /remediate can resolve a real email address via
+-- owner_contacts without a second query against failed_records_detail.
 CREATE OR REPLACE VIEW `ringed-hearth-504112-e3.audit_controls.v_dq_issues_by_application` AS
 WITH latest AS (
   SELECT run_id FROM `ringed-hearth-504112-e3.audit_controls.rule_execution_summary`
@@ -183,6 +186,8 @@ failed_apps AS (
     f.failed_rule_id AS rule_id,
     f.application_id,
     ANY_VALUE(f.application_name) AS application_name,
+    ANY_VALUE(f.business_owner) AS business_owner,
+    ANY_VALUE(f.technology_owner) AS technology_owner,
     f.run_id,
     ANY_VALUE(f.run_timestamp) AS run_timestamp
   FROM `ringed-hearth-504112-e3.audit_controls.failed_records_detail` f
@@ -195,7 +200,7 @@ latest_action AS (
     application_id,
     run_id,
     ARRAY_AGG(
-      STRUCT(status, recommended_remediation, action_type, completed_at)
+      STRUCT(status, recommended_remediation, action_type, completed_at, notified_email, notification_status)
       ORDER BY initiated_at DESC LIMIT 1
     )[OFFSET(0)] AS latest
   FROM `ringed-hearth-504112-e3.audit_controls.remediation_actions`
@@ -205,11 +210,14 @@ latest_action AS (
 SELECT
   fa.rule_id, r.rule_name, r.description, r.severity, r.dimension,
   fa.application_id, fa.application_name,
+  fa.business_owner, fa.technology_owner,
   fa.run_id, fa.run_timestamp,
   COALESCE(a.latest.status, 'Open') AS remediation_status,
   a.latest.recommended_remediation AS recommended_remediation,
   a.latest.action_type AS last_action_type,
-  a.latest.completed_at AS last_action_completed_at
+  a.latest.completed_at AS last_action_completed_at,
+  a.latest.notified_email AS last_notified_email,
+  a.latest.notification_status AS last_notification_status
 FROM failed_apps fa
 JOIN `ringed-hearth-504112-e3.audit_controls.rule_execution_summary` r
   ON r.rule_id = fa.rule_id AND r.run_id = fa.run_id
