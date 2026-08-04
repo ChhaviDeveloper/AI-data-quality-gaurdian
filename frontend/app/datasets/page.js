@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getDatasets, uploadDataset, isLiveMode } from "../../lib/api";
+import { getDatasets, uploadDataset, ingestFromBigQueryTable, isLiveMode } from "../../lib/api";
 
 export default function DatasetsPage() {
   const [rows, setRows] = useState([]);
@@ -9,6 +9,9 @@ export default function DatasetsPage() {
   const [status, setStatus] = useState(null); // { type: 'info'|'success'|'error', message }
   const [busy, setBusy] = useState(false);
   const fileInputRef = useRef(null);
+  const [bqTable, setBqTable] = useState("");
+  const [bqStatus, setBqStatus] = useState(null);
+  const [bqBusy, setBqBusy] = useState(false);
 
   function refresh() {
     getDatasets().then(setRows);
@@ -42,6 +45,23 @@ export default function DatasetsPage() {
       setStatus({ type: "error", message: err.message || "Upload failed." });
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handleBqSubmit(e) {
+    e.preventDefault();
+    const table = bqTable.trim();
+    if (!table) return;
+    setBqBusy(true);
+    setBqStatus({ type: "info", message: `Loading ${table} into staging...` });
+    try {
+      const result = await ingestFromBigQueryTable(table);
+      setBqStatus({ type: "success", message: result.message || `Loaded ${result.row_count} rows -- validating automatically.` });
+      refresh();
+    } catch (err) {
+      setBqStatus({ type: "error", message: err.message || "Could not load that table." });
+    } finally {
+      setBqBusy(false);
     }
   }
 
@@ -86,6 +106,28 @@ export default function DatasetsPage() {
             NEXT_PUBLIC_API_BASE_URL isn&apos;t set, so uploads won&apos;t work yet -- see frontend/.env.local.
           </div>
         )}
+      </div>
+
+      <div className="card" style={{ marginBottom: 18 }}>
+        <div className="card-title">Validate a BigQuery table</div>
+        <p style={{ color: "var(--muted)", fontSize: 13, marginTop: -4, marginBottom: 12 }}>
+          Already have the data in BigQuery? Point at it directly instead of exporting a CSV --
+          it's loaded into staging and validated the same way. Needs an application_id column.
+        </p>
+        <form onSubmit={handleBqSubmit} style={{ display: "flex", gap: 8 }}>
+          <input
+            type="text"
+            value={bqTable}
+            onChange={(e) => setBqTable(e.target.value)}
+            placeholder="project.dataset.table"
+            disabled={bqBusy}
+            style={{ flex: 1, padding: "8px 10px", border: "1px solid var(--border)", borderRadius: 6 }}
+          />
+          <button type="submit" className="btn btn-primary" disabled={bqBusy || !bqTable.trim()}>
+            {bqBusy ? "Loading..." : "Validate"}
+          </button>
+        </form>
+        {bqStatus && <div className={`upload-status ${bqStatus.type}`} style={{ marginTop: 8 }}>{bqStatus.message}</div>}
       </div>
 
       <div className="card">

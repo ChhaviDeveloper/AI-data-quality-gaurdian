@@ -38,6 +38,7 @@ from flask_cors import CORS
 import bq
 import gemini_helper
 import email_helper
+import bq_ingest
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("dashboard-api")
@@ -345,6 +346,42 @@ def ingest_dataset():
         "new_proposals": new_proposals,
         "dataset_name": upload.filename,
     }), 201
+
+
+@app.post("/api/ingest-bq")
+def ingest_from_bigquery():
+    """Validate data that's already sitting in a BigQuery table instead of
+    only ever uploading a CSV. See bq_ingest.py -- this loads the table into
+    staging_audit_controls and publishes staging-loaded, so it's picked up
+    by the exact same async validator pipeline a GCS-uploaded CSV goes
+    through. Always async (202): there's no synchronous DQ score to return,
+    same as _ingest_via_gcs_upload below."""
+    body = request.get_json(silent=True) or {}
+    source_table = (body.get("source_table") or "").strip()
+    if not source_table:
+        return jsonify({"error": "source_table is required (format: project.dataset.table)"}), 400
+
+    try:
+        result = bq_ingest.ingest_from_bigquery_table(
+            source_table, uploaded_by=body.get("initiated_by", "dashboard-user")
+        )
+    except bq_ingest.BQIngestError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except Exception:
+        logger.exception("Unexpected error ingesting from %s", source_table)
+        return jsonify({"error": f"Could not ingest {source_table} -- check dashboard-api logs"}), 500
+
+    return jsonify({
+        "mode": "async",
+        "batch_id": result["batch_id"],
+        "row_count": result["row_count"],
+        "source_table": result["source_table"],
+        "message": (
+            "Loaded into staging_audit_controls. The validator -> ai-proposals -> notifier "
+            "pipeline will run automatically via Eventarc, usually within a few seconds to a "
+            "minute. Refresh the Datasets or Overview page shortly to see results."
+        ),
+    }), 202
 
 
 def _ingest_via_gcs_upload(filename: str, tmp_path: str):

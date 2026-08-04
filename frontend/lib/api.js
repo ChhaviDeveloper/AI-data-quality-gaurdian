@@ -119,4 +119,26 @@ export async function uploadDataset(file, onStatus) {
   return body;
 }
 
+// Validates data that's already sitting in a BigQuery table, instead of
+// only ever uploading a CSV. Same "no mock fallback" reasoning as
+// uploadDataset -- it needs a real dashboard-api to do anything.
+export async function ingestFromBigQueryTable(sourceTable) {
+  if (!API_BASE) {
+    throw new Error(
+      "No dashboard-api configured (NEXT_PUBLIC_API_BASE_URL is unset). " +
+      "Set it in frontend/.env.local and restart the dev server."
+    );
+  }
+  const res = await fetch(`${API_BASE}/api/ingest-bq`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ source_table: sourceTable }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(body.error || `Request failed (${res.status})`);
+  }
+  return body;
+}
+
 export const isLiveMode = () => Boolean(API_BASE);
