@@ -1,0 +1,51 @@
+application_id,application_name,business_owner,technology_owner,criticality,data_classification,regulatory_scope,audit_year,last_control_test_date,evidence_submitted,evidence_submission_date,access_review_completed,access_review_date,privileged_access_count,privileged_access_approved,mfa_enabled,encryption_at_rest,backup_enabled,dr_test_completed,dr_test_date,vulnerability_status,open_high_vulnerabilities,policy_exception,exception_expiry_date,app_status,source_system
+APP-500,Payments Core,Rajesh Kumar,Kavita Rao,Medium,Restricted,SOX,2026,04-23-2026,Yes,06-14-2026,Yes,06-07-2026,1,Yes,Yes,Yes,Yes,Yes,01-22-2026,No Critical Open,0,No,,Active,CMDB
+APP-501,AML Case Manager,Vikram Rao,Kavita Rao,Medium,Confidential,Internal Audit,2026,04-23-2026,Yes,06-21-2026,Yes,05-24-2026,1,Yes,Yes,Yes,Yes,No,,No Critical Open,0,No,,Active,CMDB
+APP-502,Customer Portal,Rajesh Kumar,Farhan Sheikh,High,Restricted,SOX,2026,05-19-2026,Yes,06-23-2026,Yes,04-20-2026,1,No,Yes,Yes,Yes,Yes,06-05-2026,No Critical Open,0,Yes,10-03-2026,Active,GRC_PORTAL
+APP-503,Loan Origination,Rajesh Kumar,Anita Bose,High,Confidential,Internal Audit,2026,05-02-2026,No,,Yes,03-08-2026,1,Yes,Yes,Yes,Yes,Yes,06-02-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-504,Trade Finance,Deepa Iyer,Sunita Rao,Critical,Public,SEBI,2026,04-10-2026,Yes,01-04-2026,No,,2,Yes,Yes,Yes,No,Yes,01-05-2026,No Critical Open,0,Yes,05-11-2026,Active,GRC_PORTAL
+APP-505,Reporting Engine,Pooja Nair,Meera Joshi,High,Public,SEBI,2026,01-09-2026,Yes,02-03-2026,Yes,03-21-2026,1,Yes,Yes,Yes,Yes,Yes,05-26-2026,Critical Open,1,No,,Active,CMDB
+APP-506,Identity Service,Sunil Verma,Sunita Rao,Critical,Confidential,SOX,2026,06-01-2026,Yes,01-09-2026,Yes,03-28-2026,3,Yes,Yes,Yes,No,No,,Critical Open,3,No,,Active,CMDB
+APP-507,Notification Hub,Neha Singh,Ravi Kumar,Medium,Internal,SEBI,2026,06-02-2026,Yes,03-23-2026,Yes,06-14-2026,1,Yes,Yes,No,Yes,Yes,06-03-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-508,Data Lake,Vikram Rao,,High,Public,RBI,2026,01-08-2026,Yes,04-12-2026,Yes,01-28-2026,3,Yes,Yes,Yes,No,Yes,03-09-2026,No Critical Open,0,Yes,02-24-2026,Active,CMDB
+APP-509,Customer Onboarding,Neha Singh,Sunita Rao,Critical,Restricted,SOX,2026,02-28-2026,Yes,05-12-2026,No,,0,No,Yes,Yes,Yes,Yes,05-11-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-510,Risk Scoring Engine,,Arjun Patel,High,Internal,SOX,2026,06-12-2026,Yes,05-03-2026,Yes,01-17-2026,3,No,Yes,Yes,Yes,Yes,06-05-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-511,Collections Platform,Rajesh Kumar,Meera Joshi,Critical,Confidential,SOX,2026,04-01-2026,Yes,04-27-2026,Yes,02-18-2026,0,No,Yes,Yes,Yes,Yes,02-03-2026,No Critical Open,0,No,,Active,CMDB
+APP-512,Card Issuance,,Kavita Rao,Critical,Confidential,SOX,2026,02-07-2026,Yes,05-13-2026,Yes,05-05-2026,0,No,Yes,Yes,Yes,Yes,02-13-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-513,Treasury Ops,Neha Singh,Ravi Kumar,Low,Internal,Internal Audit,2026,06-06-2026,Yes,04-12-2026,Yes,03-21-2026,1,Yes,No,Yes,Yes,Yes,01-07-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-514,KYC Verification,Pooja Nair,Rohit Bansal,High,Confidential,SOX,2026,05-08-2026,Yes,02-08-2026,Yes,01-25-2026,2,Yes,Yes,No,Yes,Yes,02-08-2026,No Critical Open,0,Yes,12-25-2026,Active,GRC_PORTAL
+APP-515,Regulatory Filing Hub,Praveen Shah,Farhan Sheikh,Critical,Confidential,None,2026,06-08-2026,Yes,06-08-2026,Yes,03-02-2026,2,Yes,No,Yes,No,Yes,04-14-2026,No Critical Open,0,No,,Active,CMDB
+APP-516,Wealth Advisory,Vikram Rao,Rohit Bansal,Critical,Confidential,RBI,2026,03-28-2026,No,,Yes,03-12-2026,2,Yes,Yes,Yes,Yes,No,,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-517,Insurance Claims,,Meera Joshi,High,Restricted,SOX,2026,05-15-2026,Yes,01-16-2026,Yes,01-21-2026,2,Yes,Yes,Yes,Yes,Yes,04-19-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-518,Merchant Gateway,Pooja Nair,Arjun Patel,Critical,Internal,Internal Audit,2026,01-19-2026,Yes,04-05-2026,Yes,05-20-2026,1,Yes,Yes,Yes,Yes,Yes,05-22-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-519,Fraud Detection,Deepa Iyer,Sunita Rao,Critical,Confidential,Internal Audit,2026,01-16-2026,Yes,02-20-2026,Yes,02-26-2026,2,Yes,Yes,Yes,Yes,Yes,01-06-2026,No Critical Open,0,Yes,11-02-2026,Active,ACCESS_REVIEW
+APP-520,General Ledger,Neha Singh,Anita Bose,Critical,Restricted,RBI,2026,01-21-2026,Yes,04-01-2026,Yes,04-13-2026,3,Yes,No,Yes,Yes,Yes,04-19-2026,No Critical Open,0,Yes,11-17-2026,Active,CMDB
+APP-521,Branch Banking App,Praveen Shah,Kavita Rao,High,Confidential,SOX,2026,04-04-2026,Yes,02-12-2026,No,,1,Yes,Yes,Yes,Yes,Yes,01-08-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-522,Mobile Banking,Deepa Iyer,Pooja Nair,Critical,Public,RBI,2026,06-15-2026,Yes,01-05-2026,Yes,05-06-2026,0,No,No,Yes,Yes,Yes,04-11-2026,No Critical Open,0,No,,Active,CMDB
+APP-523,Internet Banking,Asha Mehta,Kavita Rao,High,Restricted,None,2026,03-09-2026,Yes,03-28-2026,Yes,04-26-2026,1,Yes,Yes,Yes,Yes,No,,No Critical Open,0,Yes,09-04-2026,Active,GRC_PORTAL
+APP-524,ATM Switch,Deepa Iyer,,Medium,Restricted,RBI,2026,04-24-2026,Yes,05-27-2026,Yes,03-20-2026,2,Yes,Yes,Yes,Yes,Yes,04-04-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-525,SWIFT Gateway,Anil Desai,Anita Bose,Critical,Confidential,RBI,2026,03-25-2026,Yes,01-02-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,06-10-2026,No Critical Open,0,Yes,08-19-2026,Active,ACCESS_REVIEW
+APP-526,Document Management,Pooja Nair,Rohit Bansal,Critical,Restricted,RBI,2026,01-01-2026,Yes,06-22-2026,Yes,05-15-2026,1,Yes,No,Yes,Yes,Yes,06-09-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-527,HR Payroll,Rajesh Kumar,Farhan Sheikh,Critical,Public,SEBI,2026,06-03-2026,Yes,05-04-2026,Yes,05-03-2026,2,Yes,Yes,Yes,Yes,Yes,06-09-2026,No Critical Open,0,Yes,08-13-2026,Active,ACCESS_REVIEW
+APP-528,Vendor Management,Anil Desai,Divya Kulkarni,High,Confidential,SEBI,2026,03-02-2026,Yes,02-12-2026,Yes,05-14-2026,0,No,Yes,Yes,Yes,No,,No Critical Open,0,Yes,06-04-2026,Active,CMDB
+APP-529,Procurement Portal,Deepa Iyer,Divya Kulkarni,High,Internal,SEBI,2026,05-15-2026,Yes,06-04-2026,Yes,04-07-2026,0,No,Yes,Yes,Yes,Yes,03-14-2026,No Critical Open,0,No,,Active,CMDB
+APP-530,Audit Trail Service,Anil Desai,Rohit Bansal,Low,Restricted,SEBI,2026,03-14-2026,Yes,06-10-2026,Yes,04-02-2026,3,Yes,Yes,Yes,Yes,Yes,02-06-2026,Critical Open,3,No,,Active,ACCESS_REVIEW
+APP-531,Data Warehouse,Sunil Verma,Anita Bose,High,Restricted,None,2026,06-19-2026,Yes,01-19-2026,Yes,06-27-2026,1,Yes,Yes,Yes,Yes,Yes,01-27-2026,No Critical Open,0,No,,Active,CMDB
+APP-532,ETL Orchestrator,Rajesh Kumar,Sunita Rao,Critical,Restricted,Internal Audit,2026,03-09-2026,No,,Yes,06-09-2026,0,No,Yes,Yes,Yes,Yes,01-24-2026,No Critical Open,0,No,,Active,CMDB
+APP-533,API Gateway,Vikram Rao,Sunita Rao,Low,Confidential,SOX,2026,05-15-2026,No,,Yes,06-02-2026,0,No,Yes,No,Yes,Yes,02-16-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-534,Config Management,Anil Desai,Sunita Rao,Medium,Restricted,SOX,2026,04-28-2026,Yes,06-12-2026,Yes,01-01-2026,0,No,Yes,Yes,Yes,Yes,02-23-2026,No Critical Open,0,Yes,05-13-2026,Active,ACCESS_REVIEW
+APP-535,Secrets Vault,Vikram Rao,,Medium,Internal,RBI,2026,04-26-2026,No,,Yes,01-05-2026,0,No,No,Yes,Yes,Yes,06-06-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-536,Log Aggregator,Asha Mehta,,Critical,Internal,None,2026,02-28-2026,Yes,01-03-2026,No,,1,Yes,Yes,Yes,Yes,Yes,02-26-2026,No Critical Open,0,No,,Active,CMDB
+APP-537,Monitoring Dashboard,,Meera Joshi,Critical,Restricted,Internal Audit,2026,01-27-2026,Yes,03-10-2026,Yes,01-28-2026,3,Yes,Yes,Yes,No,No,,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-538,Ticketing System,Rajesh Kumar,Arjun Patel,Critical,Confidential,SOX,2026,03-13-2026,No,,Yes,06-16-2026,0,No,Yes,Yes,Yes,Yes,06-17-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-539,Chatbot Assistant,,Kavita Rao,High,Confidential,Internal Audit,2026,03-22-2026,Yes,06-04-2026,Yes,06-14-2026,0,No,Yes,Yes,Yes,No,,No Critical Open,0,No,,Active,CMDB
+APP-540,Credit Bureau Feed,Manish Gupta,,Critical,Restricted,SOX,2026,04-12-2026,Yes,04-19-2026,Yes,05-20-2026,2,Yes,Yes,Yes,Yes,Yes,02-12-2026,Critical Open,5,Yes,08-27-2026,Active,GRC_PORTAL
+APP-541,Settlement Engine,Anil Desai,Kavita Rao,Critical,Restricted,SOX,2026,04-17-2026,Yes,06-23-2026,Yes,02-21-2026,3,Yes,Yes,Yes,Yes,No,,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-542,Clearing House Link,Rajesh Kumar,Meera Joshi,Critical,Confidential,None,2026,06-19-2026,Yes,04-17-2026,Yes,02-25-2026,0,No,Yes,Yes,Yes,Yes,01-12-2026,No Critical Open,0,No,,Active,CMDB
+APP-543,Escrow Manager,Asha Mehta,Meera Joshi,Low,Confidential,RBI,2026,03-25-2026,Yes,06-10-2026,Yes,05-28-2026,0,No,Yes,Yes,No,Yes,03-21-2026,No Critical Open,0,No,,Active,CMDB
+APP-544,Tax Reporting,Pooja Nair,Sunita Rao,Medium,Confidential,Internal Audit,2026,03-05-2026,Yes,06-17-2026,Yes,03-24-2026,1,Yes,No,Yes,Yes,No,,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-545,Compliance Tracker,Praveen Shah,Pooja Nair,Low,Restricted,None,2026,01-12-2026,Yes,02-24-2026,Yes,05-26-2026,2,Yes,Yes,Yes,Yes,Yes,02-01-2026,No Critical Open,0,No,,Active,CMDB
+APP-546,Legal Hold System,Anil Desai,Ravi Kumar,High,Internal,SOX,2026,02-05-2026,Yes,06-17-2026,Yes,05-04-2026,0,No,No,Yes,Yes,Yes,05-07-2026,No Critical Open,0,No,,Active,GRC_PORTAL
+APP-547,Vendor Risk Portal,Sunil Verma,Arjun Patel,Critical,Confidential,RBI,2026,04-10-2026,Yes,04-11-2026,No,,1,No,Yes,Yes,Yes,No,,No Critical Open,0,Yes,10-09-2026,Active,CMDB
+APP-548,Third Party Integration,Manish Gupta,Pooja Nair,Critical,Confidential,None,2026,04-04-2026,Yes,04-06-2026,Yes,04-08-2026,1,Yes,Yes,Yes,Yes,Yes,03-25-2026,Critical Open,1,No,,Active,GRC_PORTAL
+APP-549,Batch Scheduler,Asha Mehta,Anita Bose,Low,Restricted,None,2026,04-21-2026,Yes,05-20-2026,Yes,05-22-2026,0,No,No,Yes,Yes,Yes,02-01-2026,No Critical Open,0,No,,Active,CMDB

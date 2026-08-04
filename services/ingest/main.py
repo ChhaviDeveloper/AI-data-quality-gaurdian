@@ -86,10 +86,20 @@ def main(cloud_event):
         logger.info("Ignoring object outside %s or not a .csv file", INCOMING_PREFIX)
         return ("ignored", 200)
 
-    batch_id = str(uuid.uuid4())
+    blob = storage_client().bucket(bucket_name).blob(name)
+    metadata = blob.metadata or {}
+    # If the uploader tagged this file with an existing batch_id (dashboard-api's
+    # "re-validate this batch" flow -- see bq_ingest.py for the BigQuery-table
+    # equivalent), reuse it and REPLACE that batch's rows instead of minting a
+    # new batch_id and appending. Appending corrected rows under the same
+    # batch_id would leave the old flawed rows sitting right alongside them
+    # (duplicate application_ids, doubled counts) -- replace is what actually
+    # lets the SAME batch's Pre/Post confidence score (v_dq_confidence_pre_post)
+    # show a real before/after improvement on a second validator run.
+    override_batch_id = (metadata.get("batch_id") or "").strip() or None
+    batch_id = override_batch_id or str(uuid.uuid4())
     loaded_at = datetime.now(timezone.utc)
 
-    blob = storage_client().bucket(bucket_name).blob(name)
     raw_bytes = blob.download_as_bytes()
     df = pd.read_csv(io.BytesIO(raw_bytes), dtype=str)
 
@@ -97,8 +107,12 @@ def main(cloud_event):
     df["loaded_at"] = loaded_at.isoformat()
     df["source_file"] = f"gs://{bucket_name}/{name}"
 
-    row_count = _load_dataframe_to_staging(df)
-    logger.info("Loaded %s rows into staging as batch %s", row_count, batch_id)
+    if override_batch_id:
+        row_count = _replace_batch_rows(df, batch_id)
+        logger.info("Replaced batch %s in staging with %s corrected rows", batch_id, row_count)
+    else:
+        row_count = _load_dataframe_to_staging(df)
+        logger.info("Loaded %s rows into staging as new batch %s", row_count, batch_id)
 
     _write_dataset_registry(
         batch_id=batch_id,
@@ -108,7 +122,7 @@ def main(cloud_event):
         # -3 for the batch_id/loaded_at/source_file lineage columns we just added
         columns_count=max(len(df.columns) - 3, 0),
         loaded_at=loaded_at,
-        uploaded_by=(blob.metadata or {}).get("uploaded_by", "Unknown") if blob.metadata else "Unknown",
+        uploaded_by=metadata.get("uploaded_by", "Unknown"),
     )
     _publish_staging_loaded(batch_id, row_count, f"gs://{bucket_name}/{name}")
     return ("ok", 200)
@@ -122,6 +136,20 @@ def _load_dataframe_to_staging(df: pd.DataFrame) -> int:
     load_job = bq().load_table_from_dataframe(df, table_id, job_config=job_config)
     load_job.result()
     return len(df)
+
+
+def _replace_batch_rows(df: pd.DataFrame, batch_id: str) -> int:
+    """Deletes this batch_id's existing rows from staging, then loads the
+    corrected dataframe under the same batch_id. A plain WRITE_APPEND would
+    leave the old (flawed) rows and the new (corrected) rows both in
+    staging at once -- this is what actually makes it a *re-validation* of
+    the batch instead of just more data piling up under the same label."""
+    table_id = f"{BQ_PROJECT}.{BQ_DATASET}.{STAGING_TABLE}"
+    delete_job_config = bigquery.QueryJobConfig(
+        query_parameters=[bigquery.ScalarQueryParameter("batch_id", "STRING", batch_id)]
+    )
+    bq().query(f"DELETE FROM `{table_id}` WHERE batch_id = @batch_id", job_config=delete_job_config).result()
+    return _load_dataframe_to_staging(df)
 
 
 def _write_dataset_registry(
@@ -187,9 +215,15 @@ def _local_main():
              "goes local file -> real BigQuery directly). Needs Application Default "
              "Credentials (gcloud auth application-default login) with BigQuery write access.",
     )
+    ap.add_argument(
+        "--batch-id",
+        help="Reuse an existing batch_id and REPLACE its rows in staging instead of minting a "
+             "new batch_id and appending -- the local-mode equivalent of dashboard-api's "
+             "'re-validate this batch' flow. See _replace_batch_rows.",
+    )
     args = ap.parse_args()
 
-    batch_id = str(uuid.uuid4())
+    batch_id = args.batch_id or str(uuid.uuid4())
     loaded_at = datetime.now(timezone.utc)
 
     df = pd.read_csv(args.local_csv, dtype=str)
@@ -200,8 +234,12 @@ def _local_main():
     print(f"Wrote {len(df)} tagged rows to {args.local_out}")
 
     if args.local_to_bq:
-        row_count = _load_dataframe_to_staging(df)
-        print(f"Loaded {row_count} rows into {BQ_PROJECT}.{BQ_DATASET}.{STAGING_TABLE} (batch {batch_id})")
+        if args.batch_id:
+            row_count = _replace_batch_rows(df, batch_id)
+            print(f"Replaced batch {batch_id} in {BQ_PROJECT}.{BQ_DATASET}.{STAGING_TABLE} with {row_count} corrected rows")
+        else:
+            row_count = _load_dataframe_to_staging(df)
+            print(f"Loaded {row_count} rows into {BQ_PROJECT}.{BQ_DATASET}.{STAGING_TABLE} (batch {batch_id})")
         _write_dataset_registry(
             batch_id=batch_id,
             source_uri=args.local_csv,
