@@ -59,13 +59,9 @@ class BQIngestError(ValueError):
     bad table reference, missing required column, empty table, etc."""
 
 
-def ingest_from_bigquery_table(source_table: str, uploaded_by: str = "dashboard-user", batch_id: str | None = None) -> dict:
-    """source_table must be fully-qualified: project.dataset.table. If
-    batch_id is given, it must be an existing batch -- this REPLACES that
-    batch's rows in staging with the (presumably corrected) source table
-    instead of minting a new batch_id and appending, so the batch gets a
-    second validator run instead of ending up with old + new rows both
-    present at once. Returns {batch_id, row_count, source_table}."""
+def ingest_from_bigquery_table(source_table: str, uploaded_by: str = "dashboard-user") -> dict:
+    """source_table must be fully-qualified: project.dataset.table. Returns
+    {batch_id, row_count, source_table}."""
     if not _TABLE_REF_RE.match(source_table or ""):
         raise BQIngestError(
             f"'{source_table}' doesn't look like a fully-qualified BigQuery table "
@@ -86,8 +82,7 @@ def ingest_from_bigquery_table(source_table: str, uploaded_by: str = "dashboard-
             "check off of it, so this table can't be validated as-is."
         )
 
-    is_revalidation = bool(batch_id)
-    batch_id = batch_id or str(uuid.uuid4())
+    batch_id = str(uuid.uuid4())
     loaded_at = datetime.now(timezone.utc)
 
     # Stringify every value while preserving real NULLs (so R00x's .isnull()
@@ -103,12 +98,8 @@ def ingest_from_bigquery_table(source_table: str, uploaded_by: str = "dashboard-
     df["loaded_at"] = loaded_at.isoformat()
     df["source_file"] = f"bq://{source_table}"
 
-    if is_revalidation:
-        row_count = _replace_batch_rows(df, batch_id)
-        logger.info("Replaced batch %s in staging with %s corrected rows from %s", batch_id, row_count, source_table)
-    else:
-        row_count = _load_dataframe_to_staging(df)
-        logger.info("Loaded %s rows from %s into staging as new batch %s", row_count, source_table, batch_id)
+    row_count = _load_dataframe_to_staging(df)
+    logger.info("Loaded %s rows from %s into staging as batch %s", row_count, source_table, batch_id)
 
     _write_dataset_registry(
         batch_id=batch_id,
@@ -130,20 +121,6 @@ def _load_dataframe_to_staging(df: pd.DataFrame) -> int:
     load_job = _bq().load_table_from_dataframe(df, table_id, job_config=job_config)
     load_job.result()
     return len(df)
-
-
-def _replace_batch_rows(df: pd.DataFrame, batch_id: str) -> int:
-    """Deletes this batch_id's existing rows from staging, then loads the
-    corrected dataframe under the same batch_id -- same reasoning as
-    services/ingest/main.py's _replace_batch_rows (kept as a separate
-    self-contained copy, same "each service stays self-contained" pattern
-    as gemini_helper.py/email_helper.py)."""
-    table_id = f"{BQ_PROJECT}.{BQ_DATASET}.{STAGING_TABLE}"
-    delete_job_config = bigquery.QueryJobConfig(
-        query_parameters=[bigquery.ScalarQueryParameter("batch_id", "STRING", batch_id)]
-    )
-    _bq().query(f"DELETE FROM `{table_id}` WHERE batch_id = @batch_id", job_config=delete_job_config).result()
-    return _load_dataframe_to_staging(df)
 
 
 def _write_dataset_registry(batch_id, source_uri, dataset_name, row_count, columns_count, loaded_at, uploaded_by):

@@ -277,27 +277,18 @@ def ingest_dataset():
     if not upload.filename or not upload.filename.lower().endswith(".csv"):
         return jsonify({"error": "Only .csv files are supported"}), 400
 
-    # If the frontend passed an existing batch_id (Datasets page's
-    # "re-validate this batch" picker), this upload REPLACES that batch's
-    # rows and re-runs the validator on it, instead of ingesting a new batch.
-    override_batch_id = (request.form.get("batch_id") or "").strip() or None
-    initiated_by = request.form.get("initiated_by", "dashboard-user")
-
     tmp_dir = tempfile.mkdtemp(prefix="dq_upload_")
     tmp_path = os.path.join(tmp_dir, upload.filename)
     upload.save(tmp_path)
 
     if not _local_pipeline_available():
-        return _ingest_via_gcs_upload(upload.filename, tmp_path, batch_id=override_batch_id, uploaded_by=initiated_by)
+        return _ingest_via_gcs_upload(upload.filename, tmp_path)
 
     child_env = {**os.environ, "BQ_PROJECT": bq.BQ_PROJECT, "BQ_DATASET": bq.BQ_DATASET}
 
     logger.info("Ingesting uploaded file %s", upload.filename)
-    ingest_cmd = [sys.executable, "main.py", "--local-csv", tmp_path, "--local-to-bq"]
-    if override_batch_id:
-        ingest_cmd += ["--batch-id", override_batch_id]
     ingest_result = subprocess.run(
-        ingest_cmd,
+        [sys.executable, "main.py", "--local-csv", tmp_path, "--local-to-bq"],
         cwd=os.path.join(REPO_ROOT, "services", "ingest"),
         capture_output=True, text=True, env=child_env, timeout=UPLOAD_SUBPROCESS_TIMEOUT,
     )
@@ -369,11 +360,10 @@ def ingest_from_bigquery():
     source_table = (body.get("source_table") or "").strip()
     if not source_table:
         return jsonify({"error": "source_table is required (format: project.dataset.table)"}), 400
-    override_batch_id = (body.get("batch_id") or "").strip() or None
 
     try:
         result = bq_ingest.ingest_from_bigquery_table(
-            source_table, uploaded_by=body.get("initiated_by", "dashboard-user"), batch_id=override_batch_id
+            source_table, uploaded_by=body.get("initiated_by", "dashboard-user")
         )
     except bq_ingest.BQIngestError as exc:
         return jsonify({"error": str(exc)}), 400
@@ -394,19 +384,13 @@ def ingest_from_bigquery():
     }), 202
 
 
-def _ingest_via_gcs_upload(filename: str, tmp_path: str, batch_id: str | None = None, uploaded_by: str = "dashboard-user"):
+def _ingest_via_gcs_upload(filename: str, tmp_path: str):
     """Cloud Run deployed-container path: no sibling scripts on disk, so
     upload straight to gs://<bucket>/incoming/ instead and let the
     already-deployed Eventarc pipeline (ingest-trigger -> ingest ->
     staging-loaded -> trigger-validator -> validator job -> ... ) process it.
     Asynchronous -- there's no DQ score to return yet, just a confirmation
-    the file is on its way through the pipeline.
-
-    batch_id, if given, is tagged onto the GCS object's metadata -- ingest.py
-    reads it back out and REPLACES that batch's rows instead of ingesting a
-    new one (see services/ingest/main.py). This is also where uploaded_by
-    actually gets set now; it was read by ingest.py before but nothing ever
-    populated it, so every upload showed "Unknown"."""
+    the file is on its way through the pipeline."""
     from google.cloud import storage
 
     unique_name = f"{uuid.uuid4().hex[:8]}_{filename}"
@@ -414,10 +398,6 @@ def _ingest_via_gcs_upload(filename: str, tmp_path: str, batch_id: str | None = 
     try:
         client = storage.Client(project=bq.BQ_PROJECT)
         blob = client.bucket(BUCKET_NAME).blob(blob_path)
-        metadata = {"uploaded_by": uploaded_by}
-        if batch_id:
-            metadata["batch_id"] = batch_id
-        blob.metadata = metadata
         blob.upload_from_filename(tmp_path)
     except Exception:
         logger.exception("Could not upload %s to gs://%s/%s", filename, BUCKET_NAME, blob_path)
@@ -426,12 +406,10 @@ def _ingest_via_gcs_upload(filename: str, tmp_path: str, batch_id: str | None = 
     return jsonify({
         "mode": "async",
         "gcs_uri": f"gs://{BUCKET_NAME}/{blob_path}",
-        "batch_id": batch_id,
         "message": (
-            (f"Re-validating batch {batch_id}. " if batch_id else "Uploaded to Cloud Storage. ") +
-            "The ingest -> validator -> ai-proposals -> notifier pipeline will run automatically "
-            "via Eventarc, usually within a few seconds to a minute. Refresh the Datasets or "
-            "Overview page shortly to see results."
+            "Uploaded to Cloud Storage. The ingest -> validator -> ai-proposals -> notifier "
+            "pipeline will run automatically via Eventarc, usually within a few seconds to a "
+            "minute. Refresh the Datasets or Overview page shortly to see results."
         ),
     }), 202
 

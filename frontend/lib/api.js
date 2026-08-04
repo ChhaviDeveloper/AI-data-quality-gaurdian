@@ -105,22 +105,16 @@ export async function getAnalyticsIssueOverview() {
 // pipeline against it. Unlike the getters above, this has no mock fallback
 // -- it needs a real dashboard-api to do anything, so we throw instead of
 // silently pretending to succeed.
-// batchId, if given, must be an existing batch_id (from getDatasets()) --
-// it REPLACES that batch's rows and re-validates it, instead of ingesting
-// a new one. That's what actually makes the Overview page's Pre/Post
-// Confidence Score donuts move: they compare a batch's first validator run
-// to its most recent one, so a batch needs a second run to show any change.
-export async function uploadDataset(file, onStatus, batchId) {
+export async function uploadDataset(file, onStatus) {
   if (!API_BASE) {
     throw new Error(
       "No dashboard-api configured (NEXT_PUBLIC_API_BASE_URL is unset). " +
       "Set it in frontend/.env.local and restart the dev server."
     );
   }
-  onStatus?.(batchId ? `Re-validating batch ${batchId.slice(0, 8)}...` : "Uploading and ingesting...");
+  onStatus?.("Uploading and ingesting...");
   const form = new FormData();
   form.append("file", file);
-  if (batchId) form.append("batch_id", batchId);
   const res = await fetch(`${API_BASE}/api/ingest`, { method: "POST", body: form });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -131,9 +125,8 @@ export async function uploadDataset(file, onStatus, batchId) {
 
 // Validates data that's already sitting in a BigQuery table, instead of
 // only ever uploading a CSV. Same "no mock fallback" reasoning as
-// uploadDataset -- it needs a real dashboard-api to do anything. batchId
-// works the same way as uploadDataset's -- see the comment above it.
-export async function ingestFromBigQueryTable(sourceTable, batchId) {
+// uploadDataset -- it needs a real dashboard-api to do anything.
+export async function ingestFromBigQueryTable(sourceTable) {
   if (!API_BASE) {
     throw new Error(
       "No dashboard-api configured (NEXT_PUBLIC_API_BASE_URL is unset). " +
@@ -143,7 +136,7 @@ export async function ingestFromBigQueryTable(sourceTable, batchId) {
   const res = await fetch(`${API_BASE}/api/ingest-bq`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ source_table: sourceTable, batch_id: batchId }),
+    body: JSON.stringify({ source_table: sourceTable }),
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {

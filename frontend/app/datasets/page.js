@@ -12,25 +12,12 @@ export default function DatasetsPage() {
   const [bqTable, setBqTable] = useState("");
   const [bqStatus, setBqStatus] = useState(null);
   const [bqBusy, setBqBusy] = useState(false);
-  const [targetBatch, setTargetBatch] = useState(""); // "" = new dataset, else an existing batch_id to re-validate
 
   function refresh() {
     getDatasets().then(setRows);
   }
 
   useEffect(() => { refresh(); }, []);
-
-  // One option per distinct batch_id, labeled with its most recent dataset_name
-  // (dataset_registry gets a new row every time a batch is re-validated, so
-  // the same batch_id can appear more than once in rows).
-  const batchOptions = Array.from(
-    rows.reduce((map, d) => {
-      if (!map.has(d.batch_id) || new Date(d.uploaded_at) > new Date(map.get(d.batch_id).uploaded_at)) {
-        map.set(d.batch_id, d);
-      }
-      return map;
-    }, new Map()).values()
-  );
 
   async function handleFile(file) {
     if (!file) return;
@@ -41,7 +28,7 @@ export default function DatasetsPage() {
     setBusy(true);
     setStatus({ type: "info", message: `Ingesting ${file.name}...` });
     try {
-      const result = await uploadDataset(file, (msg) => setStatus({ type: "info", message: msg }), targetBatch || undefined);
+      const result = await uploadDataset(file, (msg) => setStatus({ type: "info", message: msg }));
       if (result.mode === "async") {
         setStatus({ type: "success", message: result.message || "Uploaded -- processing automatically in the cloud." });
       } else {
@@ -68,7 +55,7 @@ export default function DatasetsPage() {
     setBqBusy(true);
     setBqStatus({ type: "info", message: `Loading ${table} into staging...` });
     try {
-      const result = await ingestFromBigQueryTable(table, targetBatch || undefined);
+      const result = await ingestFromBigQueryTable(table);
       setBqStatus({ type: "success", message: result.message || `Loaded ${result.row_count} rows -- validating automatically.` });
       refresh();
     } catch (err) {
@@ -86,27 +73,6 @@ export default function DatasetsPage() {
         Drop a CSV below to run it through ingest, validation, and AI rule mining right from
         here -- no terminal needed.
       </p>
-
-      <div className="card" style={{ marginBottom: 18 }}>
-        <div className="card-title">Target batch</div>
-        <p style={{ color: "var(--muted)", fontSize: 13, marginTop: -4, marginBottom: 12 }}>
-          Leave as "New dataset" for a normal upload. Pick an existing batch to REPLACE its rows
-          with corrected data and re-validate it -- that's what moves the Pre/Post Confidence
-          Score on Overview, since it compares a batch's first and most recent run.
-        </p>
-        <select
-          value={targetBatch}
-          onChange={(e) => setTargetBatch(e.target.value)}
-          style={{ padding: "8px 10px", border: "1px solid var(--border)", borderRadius: 6, minWidth: 320 }}
-        >
-          <option value="">New dataset</option>
-          {batchOptions.map((d) => (
-            <option key={d.batch_id} value={d.batch_id}>
-              Re-validate: {d.dataset_name} ({d.batch_id.slice(0, 8)}...)
-            </option>
-          ))}
-        </select>
-      </div>
 
       <div className="card" style={{ marginBottom: 18 }}>
         <div
@@ -173,8 +139,8 @@ export default function DatasetsPage() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((d, i) => (
-              <tr key={`${d.batch_id}-${i}`}>
+            {rows.map((d) => (
+              <tr key={d.batch_id}>
                 <td>{d.dataset_name}</td>
                 <td>{d.uploaded_by}</td>
                 <td>{d.uploaded_at ? new Date(d.uploaded_at).toLocaleString() : "--"}</td>
