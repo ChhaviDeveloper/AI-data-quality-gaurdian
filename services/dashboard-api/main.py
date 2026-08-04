@@ -432,6 +432,15 @@ def regulations():
     return jsonify(rows)
 
 
+@app.get("/api/regulations/violations")
+def regulation_violations():
+    """Every still-open (rule, application) issue whose regulatory_scope
+    names a real regulation -- the detail rows behind each regulation's
+    open_violation_count on /api/regulations. See v_regulation_violations."""
+    rows = bq.query(f"SELECT * FROM {bq.table('v_regulation_violations')}")
+    return jsonify(rows)
+
+
 @app.get("/api/impacted-apps")
 def impacted_apps():
     rows = bq.query(f"SELECT * FROM {bq.table('v_dq_apps_at_risk')}")

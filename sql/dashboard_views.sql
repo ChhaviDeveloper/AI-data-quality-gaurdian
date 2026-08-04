@@ -188,6 +188,7 @@ failed_apps AS (
     ANY_VALUE(f.application_name) AS application_name,
     ANY_VALUE(f.business_owner) AS business_owner,
     ANY_VALUE(f.technology_owner) AS technology_owner,
+    ANY_VALUE(f.regulatory_scope) AS regulatory_scope,
     f.run_id,
     ANY_VALUE(f.run_timestamp) AS run_timestamp
   FROM `ringed-hearth-504112-e3.audit_controls.failed_records_detail` f
@@ -210,7 +211,7 @@ latest_action AS (
 SELECT
   fa.rule_id, r.rule_name, r.description, r.severity, r.dimension,
   fa.application_id, fa.application_name,
-  fa.business_owner, fa.technology_owner,
+  fa.business_owner, fa.technology_owner, fa.regulatory_scope,
   fa.run_id, fa.run_timestamp,
   COALESCE(a.latest.status, 'Open') AS remediation_status,
   a.latest.recommended_remediation AS recommended_remediation,
@@ -227,14 +228,48 @@ ORDER BY
   CASE r.severity WHEN 'Critical' THEN 1 WHEN 'High' THEN 2 WHEN 'Medium' THEN 3 ELSE 4 END,
   fa.rule_id, fa.application_id;
 
+-- 9c. Regulation violations: every still-open (rule, application) issue
+-- whose application's regulatory_scope names a real external regulation
+-- (SOX/RBI/SEBI -- see applicable_regulations). This is the direct,
+-- deterministic signal: the audit data itself already says "this
+-- application is in scope for SOX" via regulatory_scope, so an open issue
+-- on that application is a live violation risk for that regulation right
+-- now, not just a generic data quality issue. 'Internal Audit' scope
+-- deliberately isn't included -- it's the org's own internal control
+-- function, not an external regulation, so it has no applicable_regulations
+-- row to join against and correctly falls out of this view.
+CREATE OR REPLACE VIEW `ringed-hearth-504112-e3.audit_controls.v_regulation_violations` AS
+SELECT
+  reg.regulation_code, reg.regulation_name, reg.authority, reg.country,
+  i.rule_id, i.rule_name, i.severity, i.dimension, i.description,
+  i.application_id, i.application_name,
+  i.remediation_status, i.run_id, i.run_timestamp
+FROM `ringed-hearth-504112-e3.audit_controls.v_dq_issues_by_application` i
+JOIN `ringed-hearth-504112-e3.audit_controls.applicable_regulations` reg
+  ON reg.regulation_code = i.regulatory_scope
+WHERE i.remediation_status != 'Closed'
+ORDER BY
+  CASE i.severity WHEN 'Critical' THEN 1 WHEN 'High' THEN 2 WHEN 'Medium' THEN 3 ELSE 4 END,
+  reg.regulation_code, i.application_id;
+
 -- 9. Applicable regulations, latest dataset's region first. The API filters
 -- further by the country(ies) actually present in the active batch; this
 -- view just surfaces the full reference set ordered so the relevant
--- country floats to the top.
+-- country floats to the top. Also carries open_violation_count -- how many
+-- still-open (rule, application) issues currently count as a live violation
+-- of that regulation, from v_regulation_violations -- so the Regulations
+-- page can show "3 open violations" per row without a second round trip.
 CREATE OR REPLACE VIEW `ringed-hearth-504112-e3.audit_controls.v_dq_regulations` AS
+WITH violation_counts AS (
+  SELECT regulation_code, COUNT(*) AS open_violation_count
+  FROM `ringed-hearth-504112-e3.audit_controls.v_regulation_violations`
+  GROUP BY regulation_code
+)
 SELECT
   reg.regulation_code, reg.regulation_name, reg.description,
   reg.data_category, reg.country, reg.authority, reg.source_url,
-  (reg.country = (SELECT region FROM `ringed-hearth-504112-e3.audit_controls.v_dq_dataset_summary`)) AS matches_active_dataset
+  (reg.country = (SELECT region FROM `ringed-hearth-504112-e3.audit_controls.v_dq_dataset_summary`)) AS matches_active_dataset,
+  COALESCE(vc.open_violation_count, 0) AS open_violation_count
 FROM `ringed-hearth-504112-e3.audit_controls.applicable_regulations` reg
+LEFT JOIN violation_counts vc ON vc.regulation_code = reg.regulation_code
 ORDER BY matches_active_dataset DESC, reg.country, reg.regulation_code;

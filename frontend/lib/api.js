@@ -48,6 +48,10 @@ export async function getRegulations() {
   return getJson("/api/regulations", MOCK_REGULATIONS);
 }
 
+export async function getRegulationViolations() {
+  return getJson("/api/regulations/violations", []);
+}
+
 export async function getImpactedApps() {
   return getJson("/api/impacted-apps", MOCK_APPS_AT_RISK);
 }
