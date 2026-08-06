@@ -262,12 +262,18 @@ jobs:
           service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
       - uses: google-github-actions/setup-gcloud@v2
       - run: |
+          # --update-env-vars (not --set-env-vars) -- the latter REPLACES the
+          # whole env var set on every deploy, which silently wiped out the
+          # SMTP_HOST/SMTP_USER/SMTP_PASSWORD/SMTP_FROM vars (set once,
+          # manually, out-of-band) on the very next redeploy after they were
+          # configured. --update-env-vars merges instead, so vars set outside
+          # this workflow survive future redeploys.
           gcloud run deploy dashboard-api \
             --source services/dashboard-api \
             --project ${{ env.PROJECT_ID }} --region ${{ env.REGION }} \
             --service-account ${{ env.RUNTIME_SA_EMAIL }} \
             --allow-unauthenticated \
-            --set-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},BQ_DATASET=audit_controls,GCP_REGION=us-central1,BUCKET=${{ env.BUCKET_NAME }}
+            --update-env-vars BQ_PROJECT=${{ env.PROJECT_ID }},BQ_DATASET=audit_controls,GCP_REGION=us-central1,BUCKET=${{ env.BUCKET_NAME }}
 
   deploy-frontend:
     # `needs:` implicitly requires deploy-dashboard-api to have *succeeded in
