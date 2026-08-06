@@ -99,30 +99,52 @@ FROM `ringed-hearth-504112-e3.audit_controls.dataset_registry`
 ORDER BY uploaded_at DESC
 LIMIT 1;
 
--- 7. Pre/post confidence score per batch -- first validator run on a batch
--- vs. the most recent one, so re-running the validator after remediation
--- shows the "+X% Improvement" the screenshot displays. A batch that has
--- only been validated once will show pre == post (0% improvement), which
--- is correct -- nothing's been remediated and re-checked yet.
+-- 7. Pre score (actual, measured) vs. AI-predicted post-remediation score,
+-- both computed from a batch's single latest validator run -- no second
+-- upload or re-validation needed. Pre is just that run's real confidence
+-- score. Post is a PREDICTION of what the score would become if every
+-- currently-open issue's AI-suggested remediation were actually applied --
+-- nothing in the underlying data is touched to produce it. The prediction
+-- assumes a per-severity "fix rate" (the fraction of failing rows a
+-- suggested remediation would plausibly resolve): Critical issues are often
+-- real control gaps (missing evidence, no MFA) that need a human/process
+-- fix, so they get a more conservative rate; lower severities are more
+-- often mechanical/data-entry fixes an AI remediation can reliably close.
+-- Tune FIX_RATE_* below if these assumptions ever need revisiting.
 CREATE OR REPLACE VIEW `ringed-hearth-504112-e3.audit_controls.v_dq_confidence_pre_post` AS
-WITH batch_runs AS (
-  SELECT
-    batch_id,
-    run_id,
-    run_timestamp,
-    ROUND(AVG(pass_percentage), 2) AS confidence_score,
-    ROW_NUMBER() OVER (PARTITION BY batch_id ORDER BY run_timestamp ASC) AS rn_first,
-    ROW_NUMBER() OVER (PARTITION BY batch_id ORDER BY run_timestamp DESC) AS rn_last
-  FROM `ringed-hearth-504112-e3.audit_controls.rule_execution_summary`
-  GROUP BY batch_id, run_id, run_timestamp
+WITH latest_run AS (
+  SELECT batch_id, run_id, run_timestamp
+  FROM (
+    SELECT batch_id, run_id, run_timestamp,
+           ROW_NUMBER() OVER (PARTITION BY batch_id ORDER BY run_timestamp DESC) AS rn
+    FROM (SELECT DISTINCT batch_id, run_id, run_timestamp FROM `ringed-hearth-504112-e3.audit_controls.rule_execution_summary`)
+  )
+  WHERE rn = 1
+),
+rule_rows AS (
+  SELECT r.batch_id, r.run_id, r.run_timestamp, r.severity, r.total_records, r.failed_count, r.passed_count, r.pass_percentage
+  FROM `ringed-hearth-504112-e3.audit_controls.rule_execution_summary` r
+  JOIN latest_run l USING (batch_id, run_id)
 )
 SELECT
   batch_id,
-  MAX(IF(rn_first = 1, confidence_score, NULL)) AS pre_confidence_score,
-  MAX(IF(rn_last = 1, confidence_score, NULL)) AS post_confidence_score,
-  MAX(IF(rn_last = 1, run_id, NULL)) AS latest_run_id,
-  MAX(IF(rn_last = 1, run_timestamp, NULL)) AS latest_run_timestamp
-FROM batch_runs
+  ANY_VALUE(run_id) AS latest_run_id,
+  ANY_VALUE(run_timestamp) AS latest_run_timestamp,
+  ROUND(AVG(pass_percentage), 2) AS pre_confidence_score,
+  ROUND(AVG(
+    SAFE_DIVIDE(
+      passed_count + failed_count * (
+        CASE severity
+          WHEN 'Critical' THEN 0.75
+          WHEN 'High' THEN 0.85
+          WHEN 'Medium' THEN 0.90
+          ELSE 0.95
+        END
+      ),
+      total_records
+    ) * 100
+  ), 2) AS post_confidence_score
+FROM rule_rows
 GROUP BY batch_id;
 
 -- 8. Issues (latest run) joined with their current remediation status --

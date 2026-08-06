@@ -7,7 +7,7 @@ import { SeverityBadge, StatusBadge } from "../components/Badge";
 import RootCauseModal from "../components/RootCauseModal";
 import {
   getOverview, getIssues, getRegulations, getImpactedApps, getHistory,
-  remediateIssue, acceptIssue, getRootCause,
+  remediateIssue, ignoreIssue, getRootCause,
 } from "../lib/api";
 
 export default function OverviewPage() {
@@ -52,11 +52,11 @@ export default function OverviewPage() {
     }
   }
 
-  async function handleAccept(issue) {
+  async function handleIgnore(issue) {
     const key = issueKey(issue);
     setBusyKey(key);
     try {
-      await acceptIssue(issue.rule_id, issue.run_id, issue.application_id);
+      await ignoreIssue(issue.rule_id, issue.run_id, issue.application_id);
       setIssues((prev) => prev.map((i) => issueKey(i) === key ? { ...i, remediation_status: "Closed" } : i));
     } finally {
       setBusyKey(null);
@@ -81,11 +81,11 @@ export default function OverviewPage() {
 
       <div className="grid grid-3">
         <div className="card">
-          <div className="card-title">Pre Data Confidence Score ⓘ</div>
+          <div className="card-title">Data Confidence Score (Current) ⓘ</div>
           <div className="score-row">
             <ScoreDonut pct={pre} />
             <p style={{ fontSize: 13, color: "var(--muted)" }}>
-              Vertex AI has analyzed your data and identified quality issues affecting confidence.
+              Vertex AI has analyzed your data as uploaded and identified quality issues affecting confidence.
             </p>
           </div>
         </div>
@@ -117,16 +117,17 @@ export default function OverviewPage() {
         </div>
 
         <div className="card">
-          <div className="card-title">Post Data Confidence Score ⓘ</div>
+          <div className="card-title">AI-Predicted Score After Remediation ⓘ</div>
           <div className="score-row">
             <ScoreDonut pct={post} />
             <div>
               <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 6 }}>
-                Great job! Issues resolved successfully and data quality has improved.
+                Projection, not yet applied -- this is what Vertex AI estimates your confidence
+                score would reach if the suggested remediations below were carried out.
               </p>
               {improvement !== 0 && (
                 <span className="badge badge-closed">
-                  {improvement > 0 ? "+" : ""}{Math.round(improvement)}% Improvement
+                  {improvement > 0 ? "+" : ""}{Math.round(improvement)}% Potential Improvement
                 </span>
               )}
             </div>
@@ -164,9 +165,9 @@ export default function OverviewPage() {
                       <button
                         className="btn btn-outline"
                         disabled={busyKey === issueKey(issue) || issue.remediation_status === "Closed"}
-                        onClick={() => handleAccept(issue)}
+                        onClick={() => handleIgnore(issue)}
                       >
-                        Accept
+                        Ignore
                       </button>
                       <button className="btn btn-link" onClick={() => handleRootCause(issue)}>
                         Root Cause

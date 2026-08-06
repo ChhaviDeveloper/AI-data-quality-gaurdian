@@ -2,7 +2,7 @@
 dashboard-api: REST API backing the custom AI Data Guardian dashboard
 (frontend/). Read-only against the v_dq_* views in
 sql/dashboard_views.sql, plus two write endpoints (POST /remediate,
-POST /accept) that record the Remediate/Accept workflow into
+POST /ignore) that record the Remediate/Ignore workflow into
 remediation_actions.
 
 Unlike the other services in this repo (ingest, doc-parser, validator,
@@ -127,7 +127,7 @@ def overview():
 @app.get("/api/issues")
 def issues():
     """One row per (rule, application) that's currently failing in the
-    latest run -- lets each affected application be remediated/accepted on
+    latest run -- lets each affected application be remediated/ignored on
     its own instead of one status for the whole rule. See
     v_dq_issues_by_application in sql/dashboard_views.sql."""
     rows = bq.query(f"SELECT * FROM {bq.table('v_dq_issues_by_application')}")
@@ -223,8 +223,8 @@ def remediate_issue(rule_id):
     return jsonify(row), 201
 
 
-@app.post("/api/issues/<rule_id>/accept")
-def accept_issue(rule_id):
+@app.post("/api/issues/<rule_id>/ignore")
+def ignore_issue(rule_id):
     body = request.get_json(silent=True) or {}
     run_id = body.get("run_id")
     application_id = body.get("application_id")
@@ -251,12 +251,12 @@ def accept_issue(rule_id):
         "issue_type": issue.get("dimension"),
         "issue_description": issue.get("description"),
         "recommended_remediation": issue.get("recommended_remediation"),
-        "action_type": "Accept",
+        "action_type": "Ignore",
         "status": "Closed",
         "initiated_by": body.get("initiated_by", "dashboard-user"),
         "initiated_at": now.isoformat(),
         "completed_at": now.isoformat(),
-        "remediation_details": body.get("note", "Accepted as-is; no remediation applied."),
+        "remediation_details": body.get("note", "Ignored as-is; no remediation applied."),
     }
     bq.insert_row("remediation_actions", row)
     return jsonify(row), 201

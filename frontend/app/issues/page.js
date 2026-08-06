@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { SeverityBadge, StatusBadge } from "../../components/Badge";
 import RootCauseModal from "../../components/RootCauseModal";
-import { getIssues, remediateIssue, acceptIssue, getRootCause } from "../../lib/api";
+import { getIssues, remediateIssue, ignoreIssue, getRootCause } from "../../lib/api";
 
 export default function IssuesPage() {
   const [issues, setIssues] = useState([]);
@@ -31,11 +31,11 @@ export default function IssuesPage() {
     } finally { setBusyKey(null); }
   }
 
-  async function handleAccept(issue) {
+  async function handleIgnore(issue) {
     const key = issueKey(issue);
     setBusyKey(key);
     try {
-      await acceptIssue(issue.rule_id, issue.run_id, issue.application_id);
+      await ignoreIssue(issue.rule_id, issue.run_id, issue.application_id);
       setIssues((prev) => prev.map((i) => issueKey(i) === key ? { ...i, remediation_status: "Closed" } : i));
     } finally { setBusyKey(null); }
   }
@@ -93,9 +93,9 @@ export default function IssuesPage() {
                     <button
                       className="btn btn-outline"
                       disabled={busyKey === issueKey(issue) || issue.remediation_status === "Closed"}
-                      onClick={() => handleAccept(issue)}
+                      onClick={() => handleIgnore(issue)}
                     >
-                      Accept
+                      Ignore
                     </button>
                     <button className="btn btn-link" onClick={() => handleRootCause(issue)}>
                       Root Cause

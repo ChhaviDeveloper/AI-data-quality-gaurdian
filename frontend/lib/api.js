@@ -72,8 +72,8 @@ export async function remediateIssue(ruleId, runId, applicationId) {
   return postJson(`/api/issues/${ruleId}/remediate`, { run_id: runId, application_id: applicationId });
 }
 
-export async function acceptIssue(ruleId, runId, applicationId) {
-  return postJson(`/api/issues/${ruleId}/accept`, { run_id: runId, application_id: applicationId });
+export async function ignoreIssue(ruleId, runId, applicationId) {
+  return postJson(`/api/issues/${ruleId}/ignore`, { run_id: runId, application_id: applicationId });
 }
 
 export async function getRootCause(ruleId, runId, applicationId) {
