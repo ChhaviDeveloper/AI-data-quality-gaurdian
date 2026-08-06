@@ -1,6 +1,6 @@
 application_id,application_name,business_owner,technology_owner,criticality,data_classification,regulatory_scope,audit_year,last_control_test_date,evidence_submitted,evidence_submission_date,access_review_completed,access_review_date,privileged_access_count,privileged_access_approved,mfa_enabled,encryption_at_rest,backup_enabled,dr_test_completed,dr_test_date,vulnerability_status,open_high_vulnerabilities,policy_exception,exception_expiry_date,app_status,source_system
 APP-500,Payments Core,,,Medium,Restricted,SOX,2026,02-02-2026,No,,Yes,06-24-2026,0,No,No,No,No,No,,Critical Open,2,No,,Active,GRC_PORTAL
-APP-501,AML Case Manager,Vikram Rao,,Medium,Confidential,Internal Audit,2026,04-23-2026,No,,No,,2,No,No,No,No,Yes,01-24-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
+APP-501,AML Case Manager,Divya Kulkarni,,Medium,Confidential,Internal Audit,2026,04-23-2026,No,,No,,2,No,No,No,No,Yes,01-24-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
 APP-502,Customer Portal,,,High,Restricted,SOX,2026,02-10-2026,No,,No,,2,No,No,No,No,No,,Critical Open,2,No,,Active,GRC_PORTAL
 APP-503,Loan Origination,,,High,Confidential,Internal Audit,2026,01-11-2026,No,,No,,1,No,No,No,No,Yes,06-22-2026,No Critical Open,0,Yes,05-18-2026,Active,CMDB
 APP-504,Trade Finance,,,Critical,Public,SEBI,2026,02-23-2026,No,,Yes,01-05-2026,2,No,No,No,No,Yes,05-12-2026,Critical Open,2,No,,Active,CMDB
