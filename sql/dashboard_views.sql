@@ -102,15 +102,16 @@ LIMIT 1;
 -- 7. Pre score (actual, measured) vs. AI-predicted post-remediation score,
 -- both computed from a batch's single latest validator run -- no second
 -- upload or re-validation needed. Pre is just that run's real confidence
--- score. Post is a PREDICTION of what the score would become if every
--- currently-open issue's AI-suggested remediation were actually applied --
--- nothing in the underlying data is touched to produce it. The prediction
--- assumes a per-severity "fix rate" (the fraction of failing rows a
--- suggested remediation would plausibly resolve): Critical issues are often
--- real control gaps (missing evidence, no MFA) that need a human/process
--- fix, so they get a more conservative rate; lower severities are more
--- often mechanical/data-entry fixes an AI remediation can reliably close.
--- Tune FIX_RATE_* below if these assumptions ever need revisiting.
+-- score. Post comes from dq_score_predictions -- a real Vertex AI Gemini
+-- call the validator makes once per run (see services/validator/
+-- gemini_helper.py), given that run's per-rule failure breakdown, asking it
+-- to project the confidence score if the currently-recommended remediations
+-- were actually applied. Nothing in the underlying data is touched to
+-- produce it -- it's a projection surfaced right after a single upload.
+-- If that row is missing (Gemini call failed AND the validator's own
+-- internal fallback somehow didn't get written either, or this run predates
+-- the feature), fall back to a deterministic per-severity estimate so the
+-- card never shows nothing.
 CREATE OR REPLACE VIEW `ringed-hearth-504112-e3.audit_controls.v_dq_confidence_pre_post` AS
 WITH latest_run AS (
   SELECT batch_id, run_id, run_timestamp
@@ -125,27 +126,44 @@ rule_rows AS (
   SELECT r.batch_id, r.run_id, r.run_timestamp, r.severity, r.total_records, r.failed_count, r.passed_count, r.pass_percentage
   FROM `ringed-hearth-504112-e3.audit_controls.rule_execution_summary` r
   JOIN latest_run l USING (batch_id, run_id)
+),
+scored AS (
+  SELECT
+    batch_id,
+    ANY_VALUE(run_id) AS latest_run_id,
+    ANY_VALUE(run_timestamp) AS latest_run_timestamp,
+    ROUND(AVG(pass_percentage), 2) AS pre_confidence_score,
+    ROUND(AVG(
+      SAFE_DIVIDE(
+        passed_count + failed_count * (
+          CASE severity
+            WHEN 'Critical' THEN 0.75
+            WHEN 'High' THEN 0.85
+            WHEN 'Medium' THEN 0.90
+            ELSE 0.95
+          END
+        ),
+        total_records
+      ) * 100
+    ), 2) AS fallback_post_confidence_score
+  FROM rule_rows
+  GROUP BY batch_id
+),
+predictions AS (
+  SELECT batch_id, run_id, predicted_post_confidence_score, rationale,
+         ROW_NUMBER() OVER (PARTITION BY batch_id, run_id ORDER BY run_timestamp DESC) AS rn
+  FROM `ringed-hearth-504112-e3.audit_controls.dq_score_predictions`
 )
 SELECT
-  batch_id,
-  ANY_VALUE(run_id) AS latest_run_id,
-  ANY_VALUE(run_timestamp) AS latest_run_timestamp,
-  ROUND(AVG(pass_percentage), 2) AS pre_confidence_score,
-  ROUND(AVG(
-    SAFE_DIVIDE(
-      passed_count + failed_count * (
-        CASE severity
-          WHEN 'Critical' THEN 0.75
-          WHEN 'High' THEN 0.85
-          WHEN 'Medium' THEN 0.90
-          ELSE 0.95
-        END
-      ),
-      total_records
-    ) * 100
-  ), 2) AS post_confidence_score
-FROM rule_rows
-GROUP BY batch_id;
+  s.batch_id,
+  s.latest_run_id,
+  s.latest_run_timestamp,
+  s.pre_confidence_score,
+  COALESCE(p.predicted_post_confidence_score, s.fallback_post_confidence_score) AS post_confidence_score,
+  p.rationale AS post_confidence_rationale
+FROM scored s
+LEFT JOIN predictions p
+  ON p.batch_id = s.batch_id AND p.run_id = s.latest_run_id AND p.rn = 1;
 
 -- 8. Issues (latest run) joined with their current remediation status --
 -- "Remediate / Accept / Status" columns on the dashboard. Defaults to

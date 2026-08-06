@@ -36,6 +36,7 @@ import pandas as pd
 from google.cloud import bigquery, pubsub_v1
 
 from rules_engine import normalize_dataframe, run_all_rules
+import gemini_helper
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("validator")
@@ -306,8 +307,44 @@ def run(batch_id=None):
     dq_score = round(results_df["pass_percentage"].mean(), 2) if not results_df.empty else 0
     logger.info("Run %s complete. DQ score: %s%%", run_id, dq_score)
 
+    _write_predicted_post_score(results_df, run_id, run_ts, batch_id, dq_score)
+
     _publish_validation_complete(run_id, batch_id, dq_score)
     return run_id, dq_score
+
+
+def _write_predicted_post_score(results_df, run_id, run_ts, batch_id, dq_score):
+    """Ask Gemini to project the confidence score this batch would reach if
+    its currently-recommended remediations were applied, and write one row
+    to dq_score_predictions -- the dashboard's v_dq_confidence_pre_post view
+    reads this back as the "AI-Predicted Score After Remediation" card.
+    Best-effort: a Gemini failure here (missing creds, quota, bad response)
+    must never fail the validator run itself -- gemini_helper already falls
+    back to a deterministic estimate internally, and this is additionally
+    wrapped so even an unexpected error just skips the write."""
+    try:
+        rule_summaries = results_df[
+            ["rule_id", "rule_name", "severity", "dimension", "total_records", "failed_count", "pass_percentage"]
+        ].to_dict("records") if not results_df.empty else []
+        prediction = gemini_helper.predict_post_remediation_score(dq_score, rule_summaries)
+        pred_df = pd.DataFrame([{
+            "batch_id": batch_id,
+            "run_id": run_id,
+            "run_timestamp": run_ts,
+            "predicted_post_confidence_score": prediction.get("predicted_post_confidence_score"),
+            "rationale": prediction.get("rationale"),
+        }])
+        _write_df(pred_df, "dq_score_predictions")
+        logger.info(
+            "Run %s: AI-predicted post-remediation score %s%% (pre: %s%%)",
+            run_id, prediction.get("predicted_post_confidence_score"), dq_score,
+        )
+    except Exception:
+        logger.exception(
+            "Could not write a predicted post-remediation score for run %s -- "
+            "the dashboard will fall back to its own deterministic estimate.",
+            run_id,
+        )
 
 
 def _publish_validation_complete(run_id, batch_id, dq_score):
@@ -359,7 +396,15 @@ def _local_main():
 
     results_df.to_csv(os.path.join(args.local_out, "rule_execution_summary.csv"), index=False)
     impact_df.to_csv(os.path.join(args.local_out, "target_impact_summary.csv"), index=False)
-    print(f"DQ score: {round(results_df['pass_percentage'].mean(), 2) if not results_df.empty else 0}%")
+    dq_score = round(results_df["pass_percentage"].mean(), 2) if not results_df.empty else 0
+    print(f"DQ score: {dq_score}%")
+
+    rule_summaries = results_df[
+        ["rule_id", "rule_name", "severity", "dimension", "total_records", "failed_count", "pass_percentage"]
+    ].to_dict("records") if not results_df.empty else []
+    prediction = gemini_helper.predict_post_remediation_score(dq_score, rule_summaries)
+    print(f"AI-predicted post-remediation score: {prediction.get('predicted_post_confidence_score')}% "
+          f"({prediction.get('rationale')})")
     print(f"Wrote outputs to {args.local_out}/")
 
 

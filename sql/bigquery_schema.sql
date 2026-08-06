@@ -25,6 +25,24 @@ CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.rule_executio
 PARTITION BY DATE(run_timestamp)
 CLUSTER BY rule_id, batch_id;
 
+-- One row per validator run -- Vertex AI's estimate of the confidence score
+-- a batch would reach if all its currently-recommended remediations were
+-- actually applied. Written once by services/validator right after it
+-- writes rule_execution_summary for that run (see gemini_helper.py there).
+-- v_dq_confidence_pre_post joins this in as the "post" score; if a run has
+-- no row here yet (Gemini call failed, or an older run predates this
+-- feature), the view falls back to a deterministic per-severity estimate
+-- instead of showing nothing.
+CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.dq_score_predictions` (
+  batch_id STRING NOT NULL,
+  run_id STRING NOT NULL,
+  run_timestamp TIMESTAMP NOT NULL,
+  predicted_post_confidence_score FLOAT64,
+  rationale STRING
+)
+PARTITION BY DATE(run_timestamp)
+CLUSTER BY batch_id, run_id;
+
 CREATE TABLE IF NOT EXISTS `ringed-hearth-504112-e3.audit_controls.target_impact_summary` (
   run_id STRING NOT NULL,
   run_timestamp TIMESTAMP NOT NULL,

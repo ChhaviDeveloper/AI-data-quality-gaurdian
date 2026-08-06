@@ -130,6 +130,11 @@ export default function OverviewPage() {
                   {improvement > 0 ? "+" : ""}{Math.round(improvement)}% Potential Improvement
                 </span>
               )}
+              {overview?.confidence?.post_confidence_rationale && (
+                <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 6, fontStyle: "italic" }}>
+                  {overview.confidence.post_confidence_rationale}
+                </p>
+              )}
             </div>
           </div>
         </div>

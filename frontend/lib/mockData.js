@@ -23,6 +23,7 @@ export const MOCK_DATASET = {
 export const MOCK_CONFIDENCE = {
   pre_confidence_score: 62,
   post_confidence_score: 92,
+  post_confidence_rationale: "Mock data: Vertex AI would explain its projection here once a real batch is validated.",
 };
 
 export const MOCK_ISSUE_TOTALS = { total: 18, open: 12, closed: 6 };
