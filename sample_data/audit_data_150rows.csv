@@ -4,7 +4,7 @@ APP-002,AML Case Manager,Vikram Rao,Pooja Nair,High,Restricted,RBI,2026,05-06-20
 APP-003,Customer Portal,Divya Kulkarni,Arjun Patel,Medium,Internal,None,2026,20-05-2026,No,,No,,0,No,Yes,No,No,No,,No Critical Open,0,No,,Active,ACCESS_REVIEW
 APP-004,Loan Origination,Anil Desai,Sunita Rao,Critical,Confidential,SEBI,2026,01-06-2026,Yes,02-06-2026,Yes,02-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-03-2026,No Critical Open,0,No,,Active,CMDB
 APP-005,Trade Finance,Manish Gupta,Deepa Iyer,High,Restricted,SOX,2026,02-06-2026,Yes,03-06-2026,Yes,03-06-2026,2,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
-APP-006,Reporting Engine,Sunil Verma,,High,Internal,None,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
+APP-006,Reporting Engine,Divya Kulkarni,,High,Internal,None,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,0,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,CMDB
 APP-007,Identity Service,,Ravi Kumar,Critical,Confidential,SOX,2026,04-06-2026,Yes,04-06-2026,Yes,04-06-2026,3,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,ACCESS_REVIEW
 APP-008,Notification Hub,Asha Mehta,Pooja Nair,Low,Public,None,2026,01-05-2026,No,,No,,0,No,No,No,No,No,,NAN,0,No,,Retired,CMDB
 APP-009,Data Lake,Praveen Shah,Anita Bose,Critical,Confidential,Internal Audit,2026,03-06-2026,Yes,03-06-2026,Yes,03-06-2026,1,Yes,Yes,Yes,Yes,Yes,01-05-2026,No Critical Open,0,No,,Active,GRC_PORTAL
